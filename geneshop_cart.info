@@ -8,7 +8,7 @@ project = "geneshop_cart"
 configure = admin/config/geneshop_cart
 
 files[] = views/geneshop_cart_handler_field_node_add_to_basket.inc
-files[] = views/geneshop_cart_handler_field_geneshop_cart_order_items.inc
+files[] = views/geneshop_cart_handler_field_geneshop_order_items.inc
 
 ; Information added by Drupal.org packaging script on 2014-06-06
 version = "7.x-1.9"
