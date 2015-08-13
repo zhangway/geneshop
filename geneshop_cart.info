@@ -1,5 +1,5 @@
-name = "Gene Shop"
-package = E-commerce
+name = "Geneshop Cart"
+package = Geneshop Project
 description = Ajaxify Gene Shop module for Drupal. Provides the ability to add nodes from the site in a basket and then sending order on e-mail.
 
 core = 7.x
