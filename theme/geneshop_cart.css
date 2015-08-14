@@ -1,10 +1,10 @@
 .geneshop_cart-form-actions {
   text-align: right;
 }
-.add_to_basket-link-container {
+.add2basket-link-container {
   float: right;
 }
-.add_to_basket-link { /* #Tongta */
+.add2basket-link { /* #Tongta */
   -moz-box-shadow: inset 0px 1px 0px 0px #ffffff;
   -webkit-box-shadow: inset 0px 1px 0px 0px #ffffff;
   border-radius: 10px;
@@ -15,29 +15,29 @@
   text-shadow: 1px 1px 0px #ffffff;
   padding: 5px 10px;
 }
-a.add_to_basket-link:hover {
+a.add2basket-link:hover {
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #e9e9e9), color-stop(1, #f9f9f9));
   background: -moz-linear-gradient(center top, #e9e9e9 5%, #f9f9f9 100%);
   filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='#e9e9e9', endColorstr='#f9f9f9');
   background-color: #e9e9e9;
 }
-a.add_to_basket-link:active { /* #Tongta */
+a.add2basket-link:active { /* #Tongta */
   position: relative;
   top: 1px;
 }
-a.add_to_basket-link { /* #Tongta */
+a.add2basket-link { /* #Tongta */
   box-shadow: inset 0px 1px 0px 0px #ffffff;
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f9f9f9), color-stop(1, #e9e9e9));
   background: -moz-linear-gradient(center top, #f9f9f9 5%, #e9e9e9 100%);
   filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='#f9f9f9', endColorstr='#e9e9e9');
   background-color: #f9f9f9;
 }
-a.add_to_basket-link, /* #Tongta */
-a.add_to_basket-link:hover, a.add2basket-link:active { /* #Tongta */
+a.add2basket-link, /* #Tongta */
+a.add2basket-link:hover, a.add2basket-link:active { /* #Tongta */
   text-decoration: none;
   color: inherit;
 }
-span.add_to_basket-link { /* #Tongta */
+span.add2basket-link { /* #Tongta */
   background-color: #f9f9f9;
 }
 .messages-ajax,

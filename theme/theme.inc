@@ -152,6 +152,12 @@ function template_preprocess_geneshop_cart_mail_notice(&$vars, $hook) {
   $vars['order_items'] = '';
   foreach ($node->order_items['items'] as $item) {
     $output = $item['title']; //Tongta delete Qty and Price
+    if (isset($item['qty'])) {
+      $output .= ' | ' . t('qty: @qty', array('@qty' => $item['qty']));
+    }
+    if (isset($item['price'])) {
+      $output .= ' | ' . t('price: @price ', array('@price' => _lightshop_get_price_numberformat($item['price'])));
+    }
     $vars['order_items'] .= $output . "\n";
   }
 
