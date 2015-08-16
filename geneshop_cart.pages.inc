@@ -20,7 +20,12 @@ function geneshop_cart_add2basket($node, $type) {
       drupal_session_start();
     }
     $item = array();
-    $item['title'] = $node->title; // Tongta delete Qty
+    $item['title'] = $node->title; // Tongta
+    if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
+      $item['mRNA'] = 1;
+    }
+    if (variable_get('geneshop_cart_show_CDs', TRUE)) {
+      $item['CDs'] = 1;
     if ($item) {
       $_SESSION['basket']['items'][$node->nid] = $item;
       drupal_set_message(t("'@title' added in your basket", array('@title' => $node->title)));
@@ -190,11 +195,11 @@ function geneshop_cart_basket_form($form, &$form_state) {
 /**
  * Basket page form qty element validate callback.
  */
-//function _geneshop_cart_qty_element_validate($element, &$form_state, $form) {
-//  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
-//    form_error($element, t('Incorrect value of qty'));
-//  }
-//}
+function _geneshop_cart_qty_element_validate($element, &$form_state, $form) {
+  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
+    form_error($element, t('Incorrect value of qty'));
+  }
+}
 
 /**
  * Basket page form submit callback.
@@ -225,6 +230,16 @@ function _geneshop_cart_basket_update($form, &$form_state) {
       unset($_SESSION['basket']['items'][$key]);
       if (isset($_SESSION['basket']['store'][$key])) {
         unset($_SESSION['basket']['store'][$key]);
+      }
+      $updated = TRUE;
+
+    elseif (variable_get('geneshop_cart_show_mRNA', TRUE) && $_SESSION['basket]['items'][$key]['mRNA'] != $val['mRNA'] {
+      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
+      }
+      $updated = TRUE;
+
+    elseif (variable_get('geneshop_cart_show_CDs', TRUE) && $_SESSION['basket]['items'][$key]['CDs'] != $val['CDs'] {
+      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
       }
       $updated = TRUE;
     }

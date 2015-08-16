@@ -71,7 +71,17 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       '#title' => t('Display settings'),
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
-    );  // Tongta Delete display option of Qty and price
+    );  // Tongta
+    $form['display_options']['geneshop_cart_show_mRNA'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display mRNA'),
+      '#default_value' => variable_get('geneshop_cart_show_mRNA', TRUE),
+    );
+    $form['display_options']['geneshop_cart_show_CDs'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display CDs'),
+      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
+    );
   }
 
   $form['array_filter'] = array(
