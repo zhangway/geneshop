@@ -635,7 +635,7 @@ function geneshop_cart_node_info() {
  */
 function _geneshop_cart_basket_items_header() {
   $header = array();
-  $header['title'] = t('Name');
+//  $header['title'] = t('Name');
   if (variable_get('geneshop_cart_show_qty', TRUE)) {  // Tongta Add the header of Species, Chromosome, Start, End, gene_family, description, Del.
     $header['qty'] = t('Qty');
   }
