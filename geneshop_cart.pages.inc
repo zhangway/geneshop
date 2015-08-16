@@ -138,6 +138,12 @@ function geneshop_cart_basket_form($form, &$form_state) {
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
       );  // Tongta delete Qty and Price in table
+      $form['items'][$nid]['mRNA'] = array(
+        '#type' => 'checkbox',
+      );
+      $form['items'][$nid]['CDs'] = array(
+        '#type' => 'checkbox',
+      );
       $form['items'][$nid]['del'] = array(
         '#type' => 'checkbox',
       );
