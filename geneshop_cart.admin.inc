@@ -77,11 +77,23 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       '#title' => t('Display mRNA'),
       '#default_value' => variable_get('geneshop_cart_show_mRNA', TRUE),
     );
+
     $form['display_options']['geneshop_cart_show_CDs'] = array(
       '#type' => 'checkbox',
       '#title' => t('Display CDs'),
       '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
     );
+
+    if (module_exists('number')) {
+      foreach ($basket_types as $type) {
+        $fields = field_info_instances('node', $type);
+        foreach ($fields as field => $data) {
+          if($data['widget']['type'] == 'number') {
+            $field_list[$field] = $data['lable']. ' (' . $field . ')';
+          }
+        }
+      }
+    }
   }
 
   $form['array_filter'] = array(
