@@ -642,9 +642,6 @@ function _geneshop_cart_basket_items_header() {
   if (variable_get('geneshop_cart_show_CDs', TRUE)) {
     $header['CDs'] = t('CDs');
   }
-  if (variable_get('geneshop_cart_show_qty', TRUE)) {  // Tongta
-    $header['qty'] = t('Qty');
-  }
   return $header;
 }
 
