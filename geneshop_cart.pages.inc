@@ -20,13 +20,14 @@ function geneshop_cart_add2basket($node, $type) {
       drupal_session_start();
     }
     $item = array();
-    $item['title'] = $node->title; // Tongta
+    $item['title'] = $node->title;
     if (variable_get('geneshop_cart_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
-    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_get_price($node))) {
-      if ($price <= 0 || !is_numeric($price)) {
-        drupal_get_message(t('Sorry, but this product currency unavailable
+    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
+      if ($price <= 0 || !is_numeric($price)
+      ) {
+        drupal_set_message(t('Sorry, but this product currently unavailable
         for ordering'), 'warning');
         $item = FALSE;
       }
@@ -34,17 +35,13 @@ function geneshop_cart_add2basket($node, $type) {
         if (!isset($_SESSION['basket']['currency'])) {
           $_SESSION['basket']['currency'] = variable_get('geneshop_cart_price_suffix', '');
         }
-        if (!isset($_SESSION['basket']['total_sum'] {
+        if (!isset($_SESSION['basket']['total_sum'])) {
           $_SESSION['basket']['total_sum'] = 0;
         }
         $_SESSION['basket']['total_sum'] += $price;
         $item['price'] = $_SESSION['basket']['store'][$node->nid]['unit_price'] = $price;
       }
     }
-    
-//    if (variable_get('geneshop_cart_show_CDs', TRUE)) {
-//      $item['CDs'] = 1;
-//    }
     if ($item) {
       $_SESSION['basket']['items'][$node->nid] = $item;
       drupal_set_message(t("'@title' added in your basket", array('@title' => $node->title)));
@@ -170,29 +167,15 @@ function geneshop_cart_basket_form($form, &$form_state) {
           '#element_validate' => array('_geneshop_cart_qty_element_validate'),
           '#attributes' => array(
             'class' => array('qty'),
-          )
+          ),
         );
       }
       if (isset($data['price'])) {
         $form['items'][$nid]['price'] = array(
-          '#markup' => _geneshop_cart_price_numberformat($data['price']),
+          '#markup' => _geneshop_cart_get_price_numberformat($data['price']),
           '#size' => 5,
         );
       }
-//      if (isset($data['CDs'])) {
-//        $form['items'][$nid]['CDs'] = array(
-//          '#type' => 'textfield',
-//          '#default_value' => $data['mRNA'],
-//          '#size' => 4,
-//          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
-//          '#attributes' => array(
-//            'class' => array('CDs'),
-//          )
-//        );
-//      }
-//      $form['items'][$nid]['test'] = array(
-//        '#type' => 'checkbox',
-//      );
       $form['items'][$nid]['del'] = array(
         '#type' => 'checkbox',
       );
@@ -286,27 +269,16 @@ function _geneshop_cart_basket_update($form, &$form_state) {
       }
       $updated = TRUE;
     }
-//    elseif ($val['test']) {
-//      unset($_SESSION['basket']['items'][$key]);
-//      if (isset($_SESSION['basket']['store'][$key])) {
-//        unset($_SESSION['basket']['store'][$key]);
-//      }
-//      $updated = TRUE;
-//    }
-    elseif (variable_get('geneshop_cart_show_qty', TRUE) && $_SESSION['basket]['items'][$key]['qty'] != $val['qty'] {
+    elseif (variable_get('geneshop_cart_show_qty', TRUE) && $_SESSION['basket']['items'][$key]['qty'] != $val['qty']) {
       $_SESSION['basket']['items'][$key]['qty'] = $val['qty'];
       if (variable_get('geneshop_cart_show_price', FALSE)) {
         $_SESSION['basket']['items'][$key]['price'] = $val['qty'] * $_SESSION['basket']['store'][$key]['unit_price'];
       }
       drupal_set_message(t('"%title": successfully updated', array(
-          '%title' => $_SESSION['basket']['item'][$key]['title'],
-        )));
+            '%title' => $_SESSION['basket']['items'][$key]['title'],
+          )));
       $updated = TRUE;
     }
-//    elseif (variable_get('geneshop_cart_show_CDs', TRUE) && $_SESSION['basket]['items'][$key]['CDs'] != $val['CDs'] {
-//      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
-//      $updated = TRUE;
-//    }
   }
   if ($updated) {
     $form_state['rebuild'] = TRUE;

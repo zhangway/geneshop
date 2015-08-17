@@ -71,25 +71,18 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       '#title' => t('Display settings'),
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
-    );  // Tongta
+    );
     $form['display_options']['geneshop_cart_show_qty'] = array(
       '#type' => 'checkbox',
       '#title' => t('Display editable field with the quantity of selected items.'),
       '#default_value' => variable_get('geneshop_cart_show_qty', TRUE),
     );
-
-//    $form['display_options']['geneshop_cart_show_CDs'] = array(
-//      '#type' => 'checkbox',
-//      '#title' => t('Display CDs'),
-//      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
-//    );
-
     if (module_exists('number')) {
       foreach ($basket_types as $type) {
         $fields = field_info_instances('node', $type);
-        foreach ($fields as field => $data) {
-          if($data['widget']['type'] == 'number') {
-            $field_list[$field] = $data['lable']. ' (' . $field . ')';
+        foreach ($fields as $field => $data) {
+          if ($data['widget']['type'] == 'number') {
+            $field_list[$field] = $data['label'] . ' (' . $field . ')';
           }
         }
       }
@@ -107,7 +100,7 @@ function geneshop_cart_admin_settings($form, &$form_state) {
           '#collapsed' => FALSE,
           '#states' => array(
             'visible' => array(
-              ':input[name="genehsop_cart_show_price"]' => array('checked' => TRUE),
+              ':input[name="geneshop_cart_show_price"]' => array('checked' => TRUE),
             ),
           ),
         );
