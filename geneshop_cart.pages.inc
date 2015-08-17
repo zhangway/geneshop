@@ -146,7 +146,9 @@ function geneshop_cart_basket_form($form, &$form_state) {
       );  // Tongta
       if (isset($data['mRNA'])) {
         $form['items'][$nid]['mRNA'] = array(
-          '#type' => 'checkbox',
+          '#type' => 'textfield',
+          '#default_value' => $data['mRNA'],
+          '#size' => 4,
           '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
           '#attributes' => array(
             'class' => array('qty'),
@@ -154,7 +156,9 @@ function geneshop_cart_basket_form($form, &$form_state) {
       }
       if (isset($data['CDs'])) {
         $form['items'][$nid]['CDs'] = array(
-          '#type' => 'checkbox',
+          '#type' => 'textfield',
+          '#default_value' => $data['mRNA'],
+          '#size' => 4,
           '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
           '#attributes' => array(
             'class' => array('qty'),
