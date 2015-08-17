@@ -158,6 +158,9 @@ function template_preprocess_geneshop_cart_mail_notice(&$vars, $hook) {
     if (isset($item['qty'])) {
       $output .= ' | ' . t('qty: @qty', array('@qty' => $item['qty']));
     }
+    if (isset($item['price'])) {
+      $output .= ' | ' . t('price: @price ', array('@price' => _geneshop_cart_get_price_numberformat($item['price'])));
+    }
 //    if (isset($item['CDs'])) {
 //      $output .= ' | ' . t('CDs: @CDs', array('@CDs' => $item['CDs']));
 //    }

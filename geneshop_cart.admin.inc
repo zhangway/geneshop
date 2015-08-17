@@ -74,7 +74,7 @@ function geneshop_cart_admin_settings($form, &$form_state) {
     );  // Tongta
     $form['display_options']['geneshop_cart_show_qty'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Display qty'),
+      '#title' => t('Display editable field with the quantity of selected items.'),
       '#default_value' => variable_get('geneshop_cart_show_qty', TRUE),
     );
 

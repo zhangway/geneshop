@@ -24,6 +24,24 @@ function geneshop_cart_add2basket($node, $type) {
     if (variable_get('geneshop_cart_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
+    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_get_price($node))) {
+      if ($price <= 0 || !is_numeric($price)) {
+        drupal_get_message(t('Sorry, but this product currency unavailable
+        for ordering'), 'warning');
+        $item = FALSE;
+      }
+      else {
+        if (!isset($_SESSION['basket']['currency'])) {
+          $_SESSION['basket']['currency'] = variable_get('geneshop_cart_price_suffix', '');
+        }
+        if (!isset($_SESSION['basket']['total_sum'] {
+          $_SESSION['basket']['total_sum'] = 0;
+        }
+        $_SESSION['basket']['total_sum'] += $price;
+        $item['price'] = $_SESSION['basket']['store'][$node->nid]['unit_price'] = $price;
+      }
+    }
+    
 //    if (variable_get('geneshop_cart_show_CDs', TRUE)) {
 //      $item['CDs'] = 1;
 //    }
@@ -155,6 +173,12 @@ function geneshop_cart_basket_form($form, &$form_state) {
           )
         );
       }
+      if (isset($data['price'])) {
+        $form['items'][$nid]['price'] = array(
+          '#markup' => _geneshop_cart_price_numberformat($data['price']),
+          '#size' => 5,
+        );
+      }
 //      if (isset($data['CDs'])) {
 //        $form['items'][$nid]['CDs'] = array(
 //          '#type' => 'textfield',
@@ -213,7 +237,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
 }
 
 /**
- * Basket page form mRNA element validate callback. Tongta
+ * Basket page form qty element validate callback. Tongta
  */
 function _geneshop_cart_qty_element_validate($element, &$form_state, $form) {
   if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
@@ -271,6 +295,12 @@ function _geneshop_cart_basket_update($form, &$form_state) {
 //    }
     elseif (variable_get('geneshop_cart_show_qty', TRUE) && $_SESSION['basket]['items'][$key]['qty'] != $val['qty'] {
       $_SESSION['basket']['items'][$key]['qty'] = $val['qty'];
+      if (variable_get('geneshop_cart_show_price', FALSE)) {
+        $_SESSION['basket']['items'][$key]['price'] = $val['qty'] * $_SESSION['basket']['store'][$key]['unit_price'];
+      }
+      drupal_set_message(t('"%title": successfully updated', array(
+          '%title' => $_SESSION['basket']['item'][$key]['title'],
+        )));
       $updated = TRUE;
     }
 //    elseif (variable_get('geneshop_cart_show_CDs', TRUE) && $_SESSION['basket]['items'][$key]['CDs'] != $val['CDs'] {
