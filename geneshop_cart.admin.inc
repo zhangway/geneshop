@@ -78,11 +78,11 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       '#default_value' => variable_get('geneshop_cart_show_mRNA', TRUE),
     );
 
-    $form['display_options']['geneshop_cart_show_CDs'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Display CDs'),
-      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
-    );
+//    $form['display_options']['geneshop_cart_show_CDs'] = array(
+//      '#type' => 'checkbox',
+//      '#title' => t('Display CDs'),
+//      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
+//    );
 
     if (module_exists('number')) {
       foreach ($basket_types as $type) {

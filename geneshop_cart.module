@@ -639,9 +639,9 @@ function _geneshop_cart_basket_items_header() {
   if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
     $header['mRNA'] = t('mRNA');
   }
-  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
-    $header['CDs'] = t('CDs');
-  }
+//  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
+//    $header['CDs'] = t('CDs');
+//  }
   return $header;
 }
 

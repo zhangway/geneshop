@@ -13,7 +13,7 @@
         .fadeOut(1000); // Tongta
 
       var inputCountValue = $("input.mRNA", context);
-      var inputCountValue = $("input.CDs", context);
+      //      var inputCountValue = $("input.CDs", context);
       inputCountValue.bind({
       keypress: function(e) {
         if (e.which != 13 && e.which != 8 && e.which !== 0 && (e.which < 48 || e.which > 57)) {
