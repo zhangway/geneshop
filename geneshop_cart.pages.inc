@@ -21,12 +21,12 @@ function geneshop_cart_add2basket($node, $type) {
     }
     $item = array();
     $item['title'] = $node->title; // Tongta
-//    if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
-//      $item['mRNA'] = 1;
-//    }
-//    if (variable_get('geneshop_cart_show_CDs', TRUE)) {
-//      $item['CDs'] = 1;
-//    }
+    if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
+      $item['mRNA'] = 1;
+    }
+    if (variable_get('geneshop_cart_show_CDs', TRUE)) {
+      $item['CDs'] = 1;
+    }
     if ($item) {
       $_SESSION['basket']['items'][$node->nid] = $item;
       drupal_set_message(t("'@title' added in your basket", array('@title' => $node->title)));
@@ -144,31 +144,31 @@ function geneshop_cart_basket_form($form, &$form_state) {
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
       );  // Tongta
-//      if (isset($data['mRNA'])) {
-//        $form['items'][$nid]['mRNA'] = array(
-//          '#type' => 'textfield',
-//          '#default_value' => $data['mRNA'],
-//          '#size' => 4,
-//          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
-//          '#attributes' => array(
-//            'class' => array('qty'),
-//          )
-//        );
-//      }
-//      if (isset($data['CDs'])) {
-//        $form['items'][$nid]['CDs'] = array(
-//          '#type' => 'textfield',
-//          '#default_value' => $data['mRNA'],
-//          '#size' => 4,
-//          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
-//          '#attributes' => array(
-//            'class' => array('qty'),
-//          )
-//        );
-//      }
-      $form['items'][$nid]['test'] = array(
-        '#type' => 'checkbox',
-      );
+      if (isset($data['mRNA'])) {
+        $form['items'][$nid]['mRNA'] = array(
+          '#type' => 'textfield',
+          '#default_value' => $data['mRNA'],
+          '#size' => 4,
+          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
+          '#attributes' => array(
+            'class' => array('qty'),
+          )
+        );
+      }
+      if (isset($data['CDs'])) {
+        $form['items'][$nid]['CDs'] = array(
+          '#type' => 'textfield',
+          '#default_value' => $data['mRNA'],
+          '#size' => 4,
+          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
+          '#attributes' => array(
+            'class' => array('qty'),
+          )
+        );
+      }
+//      $form['items'][$nid]['test'] = array(
+//        '#type' => 'checkbox',
+//      );
       $form['items'][$nid]['del'] = array(
         '#type' => 'checkbox',
       );
@@ -215,20 +215,20 @@ function geneshop_cart_basket_form($form, &$form_state) {
 /**
  * Basket page form mRNA element validate callback. Tongta
  */
-//function _geneshop_cart_mRNA_element_validate($element, &$form_state, $form) {
-//  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
-//    form_error($element, t('Incorrect value of mRNA'));
-//  }
-//}
+function _geneshop_cart_mRNA_element_validate($element, &$form_state, $form) {
+  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
+    form_error($element, t('Incorrect value of mRNA'));
+  }
+}
 
 /**
  * Basket page form CDs element validate callback. Tongta
  */
-//function _geneshop_cart_CDs_element_validate($element, &$form_state, $form) {
-//  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
-//    form_error($element, t('Incorrect value of CDs'));
-//  }
-//}
+function _geneshop_cart_CDs_element_validate($element, &$form_state, $form) {
+  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
+    form_error($element, t('Incorrect value of CDs'));
+  }
+}
 
 /**
  * Basket page form submit callback.
@@ -262,20 +262,20 @@ function _geneshop_cart_basket_update($form, &$form_state) {
       }
       $updated = TRUE;
     }
-    if ($val['test']) {
-      unset($_SESSION['basket']['items'][$key]);
-      if (isset($_SESSION['basket']['store'][$key])) {
-        unset($_SESSION['basket']['store'][$key]);
+//    if ($val['test']) {
+//      unset($_SESSION['basket']['items'][$key]);
+//      if (isset($_SESSION['basket']['store'][$key])) {
+//        unset($_SESSION['basket']['store'][$key]);
+//    }
+    elseif (variable_get('geneshop_cart_show_mRNA', TRUE) && $_SESSION['basket]['items'][$key]['mRNA'] != $val['mRNA'] {
+      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
+      $updated = TRUE;
     }
-//    elseif (variable_get('geneshop_cart_show_mRNA', TRUE) && $_SESSION['basket]['items'][$key]['mRNA'] != $val['mRNA'] {
-//      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
-//      $updated = TRUE;
-//    }
-//    elseif (variable_get('geneshop_cart_show_CDs', TRUE) && $_SESSION['basket]['items'][$key]['CDs'] != $val['CDs'] {
-//      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
-//      $updated = TRUE;
-//    }
-//  }
+    elseif (variable_get('geneshop_cart_show_CDs', TRUE) && $_SESSION['basket]['items'][$key]['CDs'] != $val['CDs'] {
+      $_SESSION['basket']['items'][$key]['mRNA'] = $val['mRNA'];
+      $updated = TRUE;
+    }
+  }
   if ($updated) {
     $form_state['rebuild'] = TRUE;
     _geneshop_cart_update_total();

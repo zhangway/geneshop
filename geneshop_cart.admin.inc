@@ -72,28 +72,62 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
     );  // Tongta
-//    $form['display_options']['geneshop_cart_show_mRNA'] = array(
-//      '#type' => 'checkbox',
-//      '#title' => t('Display mRNA'),
-//      '#default_value' => variable_get('geneshop_cart_show_mRNA', TRUE),
-//    );
-//
-//    $form['display_options']['geneshop_cart_show_CDs'] = array(
-//      '#type' => 'checkbox',
-//      '#title' => t('Display CDs'),
-//      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
-//    );
-//
-//    if (module_exists('number')) {
-//      foreach ($basket_types as $type) {
-//        $fields = field_info_instances('node', $type);
-//        foreach ($fields as field => $data) {
-//          if($data['widget']['type'] == 'number') {
-//            $field_list[$field] = $data['lable']. ' (' . $field . ')';
-//          }
-//        }
-//      }
-//    }
+    $form['display_options']['geneshop_cart_show_mRNA'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display mRNA'),
+      '#default_value' => variable_get('geneshop_cart_show_mRNA', TRUE),
+    );
+
+    $form['display_options']['geneshop_cart_show_CDs'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display CDs'),
+      '#default_value' => variable_get('geneshop_cart_show_CDs', TRUE),
+    );
+
+    if (module_exists('number')) {
+      foreach ($basket_types as $type) {
+        $fields = field_info_instances('node', $type);
+        foreach ($fields as field => $data) {
+          if($data['widget']['type'] == 'number') {
+            $field_list[$field] = $data['lable']. ' (' . $field . ')';
+          }
+        }
+      }
+      if (!empty($field_list)) {
+        $form['display_options']['lightshop_show_price'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Display price data for basket items.'),
+          '#default_value' => variable_get('lightshop_show_price', FALSE),
+        );
+        array_unshift($field_list, '');
+        $form['price_options'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Fields setting'),
+          '#collapsible' => FALSE,
+          '#collapsed' => FALSE,
+          '#states' => array(
+            'visible' => array(
+              ':input[name="lightshop_show_price"]' => array('checked' => TRUE),
+            ),
+          ),
+        );
+        $form['price_options']['lightshop_price_field'] = array(
+          '#type' => 'select',
+          '#title' => t('Select a price field'),
+          '#options' => $field_list,
+          '#default_value' => variable_get('lightshop_price_field', ''),
+          '#description' => t('The field(integer or float types) whose value will be the price of the product. Option is disabled if no fields selected.'),
+        );
+        $form['price_options']['lightshop_price_suffix'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Suffix for price (currency)'),
+          '#default_value' => variable_get('lightshop_price_suffix', ''),
+          '#size' => 20,
+          '#maxlength' => 20,
+          '#description' => t('Suffix to be added to the value of the price. Eg: $, rub, euro'),
+        );
+      }
+    }
   }
 
   $form['array_filter'] = array(

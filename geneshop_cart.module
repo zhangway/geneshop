@@ -636,12 +636,12 @@ function geneshop_cart_node_info() {
 function _geneshop_cart_basket_items_header() {
   $header = array();
   $header['title'] = t('Name');
-//  if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
-//    $header['mRNA'] = t('mRNA');
-//  }
-//  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
-//    $header['CDs'] = t('CDs');
-//  }
+  if (variable_get('geneshop_cart_show_mRNA', TRUE)) {
+    $header['mRNA'] = t('mRNA');
+  }
+  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
+    $header['CDs'] = t('CDs');
+  }
   return $header;
 }
 

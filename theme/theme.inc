@@ -45,7 +45,7 @@ function theme_geneshop_cart_items_form($vars) {
   $header = _geneshop_cart_basket_items_header();
 //  $header['mRNA'] = t('mRNA');
 //  $header['CDs'] = t('CDs');
-  $header['test'] = t('test');
+//  $header['test'] = t('test');
   $header['del'] = t('Del.');
 
   $element = $vars['element'];
