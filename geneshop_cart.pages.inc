@@ -178,6 +178,9 @@ function geneshop_cart_basket_form($form, &$form_state) {
       $form['items'][$nid]['del'] = array(
         '#type' => 'checkbox',
       );
+      $form['items'][$nid]['CDs'] = array(
+        '#type' => 'checkbox',
+      );
     }
 
     $form['actions'] = array(

@@ -47,6 +47,7 @@ function theme_geneshop_cart_items_form($vars) {
 //  $header['CDs'] = t('CDs');
 //  $header['test'] = t('test');
   $header['del'] = t('Del.');
+  $header['CDs'] = t('CDs.');
 
   $element = $vars['element'];
 
