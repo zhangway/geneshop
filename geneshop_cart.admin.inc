@@ -94,10 +94,10 @@ function geneshop_cart_admin_settings($form, &$form_state) {
         }
       }
       if (!empty($field_list)) {
-        $form['display_options']['lightshop_show_price'] = array(
+        $form['display_options']['geneshop_cart_show_price'] = array(
           '#type' => 'checkbox',
           '#title' => t('Display price data for basket items.'),
-          '#default_value' => variable_get('lightshop_show_price', FALSE),
+          '#default_value' => variable_get('geneshop_cart_show_price', FALSE),
         );
         array_unshift($field_list, '');
         $form['price_options'] = array(
@@ -107,21 +107,21 @@ function geneshop_cart_admin_settings($form, &$form_state) {
           '#collapsed' => FALSE,
           '#states' => array(
             'visible' => array(
-              ':input[name="lightshop_show_price"]' => array('checked' => TRUE),
+              ':input[name="genehsop_cart_show_price"]' => array('checked' => TRUE),
             ),
           ),
         );
-        $form['price_options']['lightshop_price_field'] = array(
+        $form['price_options']['geneshop_cart_price_field'] = array(
           '#type' => 'select',
           '#title' => t('Select a price field'),
           '#options' => $field_list,
-          '#default_value' => variable_get('lightshop_price_field', ''),
+          '#default_value' => variable_get('geneshop_cart_price_field', ''),
           '#description' => t('The field(integer or float types) whose value will be the price of the product. Option is disabled if no fields selected.'),
         );
-        $form['price_options']['lightshop_price_suffix'] = array(
+        $form['price_options']['geneshop_cart_price_suffix'] = array(
           '#type' => 'textfield',
           '#title' => t('Suffix for price (currency)'),
-          '#default_value' => variable_get('lightshop_price_suffix', ''),
+          '#default_value' => variable_get('geneshop_cart_price_suffix', ''),
           '#size' => 20,
           '#maxlength' => 20,
           '#description' => t('Suffix to be added to the value of the price. Eg: $, rub, euro'),
