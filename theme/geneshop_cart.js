@@ -12,7 +12,7 @@
         .delay(2000)
         .fadeOut(1000); // Tongta
 
-      var inputCountValue = $("input.mRNA", context);
+      var inputCountValue = $("input.qty", context);
       //      var inputCountValue = $("input.CDs", context);
       inputCountValue.bind({
       keypress: function(e) {

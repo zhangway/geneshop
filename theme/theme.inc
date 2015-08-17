@@ -155,13 +155,13 @@ function template_preprocess_geneshop_cart_mail_notice(&$vars, $hook) {
   $vars['order_items'] = '';
   foreach ($node->order_items['items'] as $item) {
     $output = $item['title']; //Tongta
-//    if (isset($item['mRNA'])) {
-//      $output .= ' | ' . t('mRNA: @mRNA', array('@mRNA' => $item['mRNA']));
-//    }
+    if (isset($item['qty'])) {
+      $output .= ' | ' . t('qty: @qty', array('@qty' => $item['qty']));
+    }
 //    if (isset($item['CDs'])) {
 //      $output .= ' | ' . t('CDs: @CDs', array('@CDs' => $item['CDs']));
 //    }
-//    $vars['order_items'] .= $output . "\n";
+    $vars['order_items'] .= $output . "\n";
   }
 
   $vars['total_sum'] = isset($node->order_items['total_sum']) ? _geneshop_cart_get_price_numberformat($node->order_items['total_sum']) : '';
