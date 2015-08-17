@@ -151,7 +151,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
           '#size' => 4,
           '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
           '#attributes' => array(
-            'class' => array('qty'),
+            'class' => array('mRNA'),
           )
         );
       }
@@ -162,7 +162,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
 //          '#size' => 4,
 //          '#element_validate' => array('_geneshop_cart_mRNA_element_validate'),
 //          '#attributes' => array(
-//            'class' => array('qty'),
+//            'class' => array('CDs'),
 //          )
 //        );
 //      }
