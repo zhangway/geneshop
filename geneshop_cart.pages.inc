@@ -161,9 +161,8 @@ function geneshop_cart_basket_form($form, &$form_state) {
       );  // Tongta
       if (isset($data['qty'])) {
         $form['items'][$nid]['qty'] = array(
-          '#type' => 'textfield',
+          '#type' => 'checkbox',
           '#default_value' => $data['qty'],
-          '#size' => 4,
           '#element_validate' => array('_geneshop_cart_qty_element_validate'),
           '#attributes' => array(
             'class' => array('qty'),
