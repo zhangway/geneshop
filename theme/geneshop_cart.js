@@ -12,14 +12,14 @@
         .delay(2000)
         .fadeOut(1000); // Tongta
 
-      var inputCountValue = $("input.mRNA", context);
-      var inputCountValue = $("input.CDs", context);
-      inputCountValue.bind({
-        keypress: function(e) {
-          if (e.which != 13 && e.which != 8 && e.which !== 0 && (e.which < 48 || e.which > 57)) {
-            return false;
-          }
-	},
+      //      var inputCountValue = $("input.mRNA", context);
+      //      var inputCountValue = $("input.CDs", context);
+      //      inputCountValue.bind({
+      //        keypress: function(e) {
+      //  if (e.which != 13 && e.which != 8 && e.which !== 0 && (e.which < 48 || e.which > 57)) {
+      //    return false;
+      //  }
+      //},
         focus: function() {
           this.title = this.value;
           this.value = "";
