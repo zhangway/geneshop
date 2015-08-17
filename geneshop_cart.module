@@ -642,6 +642,8 @@ function _geneshop_cart_basket_items_header() {
 //  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
 //    $header['CDs'] = t('CDs');
 //  }
+  if (variable_get('geneshop_cart_show_price', FALSE)) {
+    $header['price'] = t('Price')
   return $header;
 }
 
