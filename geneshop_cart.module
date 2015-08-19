@@ -79,10 +79,11 @@ function geneshop_cart_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'geneshop_cart.pages.inc',
   );
-  $items['basket/checkout'] = array(
-    'title' => 'Checkout',
-    'page callback' => 'geneshop_cart_checkout',
-    'access callback' => 'geneshop_cart_basket_access',
+  $items['basket/download'] = array(
+    'title' => 'Download',
+    'page callback' => 'geneshop_cart_file_download',
+    'page arguments' => array(3),
+//    'access callback' => 'geneshop_cart_basket_access',
     'type' => MENU_CALLBACK,
     'file' => 'geneshop_cart.pages.inc',
   );
@@ -540,7 +541,7 @@ function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
     $form['#prefix'] = '<div id="new-order-add-form">';
     $form['#suffix'] = '</div>';
     unset($form['actions']['preview']);
-    $form['actions']['submit']['#value'] = t('Send order');
+    $form['actions']['submit']['#value'] = t('Confirm Download');
     $form['actions']['submit']['#submit'][0] = 'geneshop_cart_node_form_submit';
     $form['actions']['submit']['#name'] = 'new_order';
     $form['actions']['submit']['#ajax'] = array(
@@ -667,15 +668,15 @@ function geneshop_cart_form($node, &$form_state) {
     '#basket' => $basket,
     '#weight' => -99,
   );
-  $form['order_mail'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Contact e-mail'),
-    '#default_value' => isset($node->nid) ? $node->order_mail
-     : ($user->uid > 0 ? $user->mail : ''),
-    '#size' => 60,
-    '#required' => TRUE,
-    '#disabled' => isset($node->nid),
-  );
+//  $form['order_mail'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t('Contact e-mail'),
+//    '#default_value' => isset($node->nid) ? $node->order_mail
+//     : ($user->uid > 0 ? $user->mail : ''),
+//    '#size' => 60,
+//    '#required' => TRUE,
+//    '#disabled' => isset($node->nid),
+//  );
   $form['#validate'][] = 'geneshop_cart_order_validate';
 
   return $form;

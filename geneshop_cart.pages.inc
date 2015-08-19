@@ -81,10 +81,10 @@ function geneshop_cart_ajaxform_process() {
       $title = t('Do you really want to delete all items from the basket?');
       break;
 
-    case 'checkout':
-      $form = geneshop_cart_checkout(TRUE);
-      $form['#action'] = 'basket/checkout';
-      $title = t('Checkout');
+    case 'download':
+      $form = geneshop_cart_download(TRUE);
+      $form['#action'] = 'basket/download';
+      $title = t('Download');
       break;
 
     default:
@@ -201,14 +201,14 @@ function geneshop_cart_basket_form($form, &$form_state) {
         'class' => array('update-button'),
       ),
     );
-
-    $form['actions']['checkout'] = array(
+// Add botton on basket-page Tongta.
+    $form['actions']['download'] = array(
       '#type' => 'submit',
-      '#name' => 'checkout',
-      '#value' => t('Checkout'),
+      '#name' => 'download',
+      '#value' => t('Download'),
       '#ajax' => $ajax_settings,
       '#attributes' => array(
-        'class' => array('checkout-button'),
+        'class' => array('download-button'),
       ),
     );
     $form['#validate'][] = 'geneshop_cart_check_empty_basket';
@@ -251,8 +251,8 @@ function geneshop_cart_basket_form_submit($form, &$form_state) {
       $form_state['redirect'] = 'basket/clear';
       break;
 
-    case 'checkout':
-      $form_state['redirect'] = 'basket/checkout';
+    case 'download':
+      $form_state['redirect'] = 'basket/download';
       break;
   }
 }
@@ -303,10 +303,17 @@ function _geneshop_cart_update_total() {
 /**
  * Calling the checkout form.
  */
-function geneshop_cart_checkout($ajax = FALSE) {
-  module_load_include('inc', 'node', 'node.pages');
-  $add_form = node_add('geneshop_cart_order');
-  return $ajax ? $add_form : drupal_render($add_form);
+function geneshop_cart_file_download($url) {
+  // Check if the file is controlled the current module.
+//  if (!file_prepare_directory($uri) {
+//    $url = FALSE;
+//  }
+  $query = db_select('file_usage', 'fu');
+  $query -> addField('fu', 'id');
+  $query -> join('file_managed', 'fm', 'fm.fid = fu.fid');
+  $query -> condition('fm.uri', $uri, '=');
+  $query -> condition('fu.type', 'node', '=');
+  $result = $query -> execute();
 }
 
 /**
