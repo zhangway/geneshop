@@ -13,13 +13,16 @@ function geneshop_cart_admin_settings($form, &$form_state) {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
-  $form['general']['geneshop_cart_basket_email'] = array(
+
+// Inactivate the e-mail function Tongta.
+/*  $form['general']['geneshop_cart_basket_email'] = array(
     '#type' => 'textfield',
     '#title' => t('E-mail'),
     '#required' => TRUE,
     '#default_value' => variable_get('geneshop_cart_basket_email', variable_get('site_mail', ini_get('sendmail_from'))),
     '#description' => t('E-mail address to which the order will be sent.'),
-  );
+  ); */
+
   $form['general']['geneshop_cart_order_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Order title'),

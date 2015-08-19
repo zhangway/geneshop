@@ -658,7 +658,7 @@ function geneshop_cart_form($node, &$form_state) {
   }
   global $user;
   if (!isset($node->nid)) {
-    drupal_set_title(t('Checkout page'));
+    drupal_set_title(t('Download'));
   }
   $basket = isset($node->nid) ? $node->order_items : $_SESSION['basket'];
 

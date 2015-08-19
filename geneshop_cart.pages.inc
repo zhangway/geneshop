@@ -82,7 +82,7 @@ function geneshop_cart_ajaxform_process() {
       break;
 
     case 'download':
-      $form = geneshop_cart_download(TRUE);
+      $form = geneshop_cart_file_download(TRUE);
       $form['#action'] = 'basket/download';
       $title = t('Download');
       break;
@@ -301,19 +301,26 @@ function _geneshop_cart_update_total() {
 }
 
 /**
- * Calling the checkout form.
+ * Implements hook_file_download().
  */
-function geneshop_cart_file_download($url) {
-  // Check if the file is controlled the current module.
-//  if (!file_prepare_directory($uri) {
-//    $url = FALSE;
-//  }
-  $query = db_select('file_usage', 'fu');
-  $query -> addField('fu', 'id');
-  $query -> join('file_managed', 'fm', 'fm.fid = fu.fid');
-  $query -> condition('fm.uri', $uri, '=');
-  $query -> condition('fu.type', 'node', '=');
-  $result = $query -> execute();
+function geneshop_cart_file_download($uri) {
+  global $user;
+
+  // Get the file record based on the URI. If not in the database just return.
+  $files = file_load_multiple(array(), array('uri' => $uri));
+  if (count($files)) {
+    foreach ($files as $item) {
+      // Since some database servers sometimes use a case-insensitive comparison
+      // by default, double check that the filename is an exact match.
+      if ($item -> uri === $uri) {
+        $file = $item;
+        break;
+      }
+    }
+  }
+  if (!isset($file)) {
+    return;
+  }
 }
 
 /**
