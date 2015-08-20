@@ -82,7 +82,7 @@ function geneshop_cart_ajaxform_process() {
       break;
 
     case 'download':
-      $form = geneshop_cart_file_download(TRUE);
+      $form = geneshop_cart_download(TRUE);
       $form['#action'] = 'basket/download';
       $title = t('Download');
       break;
@@ -204,7 +204,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
 // Add botton on basket-page Tongta.
     $form['actions']['download'] = array(
       '#type' => 'submit',
-      '#name' => 'download',
+      '#submit' => array('_geneshop_cart_file_download'),
       '#value' => t('Download'),
       '#ajax' => $ajax_settings,
       '#attributes' => array(
@@ -303,7 +303,7 @@ function _geneshop_cart_update_total() {
 /**
  * Implements hook_file_download().
  */
-function geneshop_cart_file_download($uri) {
+function geneshop_cart_file_download($node) {
   global $user;
 
   // Get the file record based on the URI. If not in the database just return.
@@ -321,6 +321,15 @@ function geneshop_cart_file_download($uri) {
   if (!isset($file)) {
     return;
   }
+}
+
+/**
+ * Calling the download form.
+ */
+function geneshop_cart_download($ajax = FALSE) {
+  module_load_include('inc', 'node', 'node.pages');
+  $add_form = node_add('geneshop_cart_order');
+  return $ajax ? $add_form : drupal_render($add_form);
 }
 
 /**
