@@ -79,14 +79,14 @@ function geneshop_cart_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'geneshop_cart.pages.inc',
   );
-//  $items['basket/download'] = array(
-//    'title' => 'Download',
-//    'page callback' => 'geneshop_cart_file_download',
-//    'page arguments' => array(3),
-//    'access callback' => 'geneshop_cart_basket_access',
-//    'type' => MENU_CALLBACK,
-//    'file' => 'geneshop_cart.pages.inc',
-//  );
+  $items['basket/download'] = array(
+    'title' => 'Download',
+    'page callback' => 'geneshop_cart_file_download',
+    'page arguments' => array(3),
+    'access callback' => 'geneshop_cart_basket_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'geneshop_cart.pages.inc',
+  );
   $items['order/%node'] = array(
     'title' => 'Order page',
     'page callback' => '_geneshop_cart_get_my_order',
@@ -536,7 +536,7 @@ function geneshop_cart_block_content() {
 /**
  * Implements hook_form_alter().
  */
-function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
+/*function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == geneshop_cart_ORDER_NODETYPE . '_node_form' && empty($form['nid']['#value'])) {
     $form['#prefix'] = '<div id="new-order-add-form">';
     $form['#suffix'] = '</div>';
@@ -550,7 +550,7 @@ function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
     );
     form_load_include($form_state, 'inc', 'node', 'node.pages');
   }
-}
+}*/
 
 /**
  * Form submission handler for order node types.
@@ -637,12 +637,6 @@ function geneshop_cart_node_info() {
 function _geneshop_cart_basket_items_header() {
   $header = array();
   $header['title'] = t('Name');
-//  if (variable_get('geneshop_cart_show_qty', TRUE)) {
-//    $header['qty'] = t('mRNA');
-//  }
-//  if (variable_get('geneshop_cart_show_CDs', TRUE)) {
-//    $header['CDs'] = t('CDs');
-//  }
   if (variable_get('geneshop_cart_show_price', FALSE)) {
     $header['price'] = t('Price');
   }
@@ -668,15 +662,15 @@ function geneshop_cart_form($node, &$form_state) {
     '#basket' => $basket,
     '#weight' => -99,
   );
-//  $form['order_mail'] = array(
-//    '#type' => 'textfield',
-//    '#title' => t('Contact e-mail'),
-//    '#default_value' => isset($node->nid) ? $node->order_mail
-//     : ($user->uid > 0 ? $user->mail : ''),
-//    '#size' => 60,
-//    '#required' => TRUE,
-//    '#disabled' => isset($node->nid),
-//  );
+/*  $form['order_mail'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Contact e-mail'),
+    '#default_value' => isset($node->nid) ? $node->order_mail
+     : ($user->uid > 0 ? $user->mail : ''),
+    '#size' => 60,
+    '#required' => TRUE,
+    '#disabled' => isset($node->nid),
+  ); */
   $form['#validate'][] = 'geneshop_cart_order_validate';
 
   return $form;

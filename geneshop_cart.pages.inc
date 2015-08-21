@@ -206,7 +206,6 @@ function geneshop_cart_basket_form($form, &$form_state) {
       '#type' => 'submit',
       '#submit' => array('_geneshop_cart_file_download'),
       '#value' => t('Download'),
-      '#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('download-button'),
       ),
@@ -303,11 +302,14 @@ function _geneshop_cart_update_total() {
 /**
  * Implements hook_file_download().
  */
-function geneshop_cart_file_download($node) {
+function _geneshop_cart_file_download($node) {
   global $user;
 
+  $file = fopen("mRNA.txt", "w");
+  fclose($file);
+
   // Get the file record based on the URI. If not in the database just return.
-  $files = file_load_multiple(array(), array('uri' => $uri));
+/*  $files = file_load_multiple(array(), array('uri' => $uri));
   if (count($files)) {
     foreach ($files as $item) {
       // Since some database servers sometimes use a case-insensitive comparison
@@ -320,7 +322,7 @@ function geneshop_cart_file_download($node) {
   }
   if (!isset($file)) {
     return;
-  }
+  }*/
 }
 
 /**
