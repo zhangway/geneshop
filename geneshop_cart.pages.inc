@@ -82,7 +82,7 @@ function geneshop_cart_ajaxform_process() {
       break;
 
     case 'download':
-      $form = geneshop_cart_download(TRUE);
+      $form = geneshop_cart_check_order(TRUE);
       $form['#action'] = 'basket/download';
       $title = t('Download');
       break;
@@ -305,8 +305,10 @@ function _geneshop_cart_update_total() {
 function _geneshop_cart_file_download($node) {
   global $user;
 
-  $file = fopen("mRNA.txt", "w");
-  fclose($file);
+  $data = t('sequence');
+  $file = file_save_data($data, $destination = NULL, $replace = FILE_EXISTS_RENAME);
+
+  
 
   // Get the file record based on the URI. If not in the database just return.
 /*  $files = file_load_multiple(array(), array('uri' => $uri));
@@ -319,16 +321,16 @@ function _geneshop_cart_file_download($node) {
         break;
       }
     }
-  }
+  }*/
   if (!isset($file)) {
     return;
-  }*/
+  }
 }
 
 /**
  * Calling the download form.
  */
-function geneshop_cart_download($ajax = FALSE) {
+function geneshop_cart_check_order($ajax = FALSE) {
   module_load_include('inc', 'node', 'node.pages');
   $add_form = node_add('geneshop_cart_order');
   return $ajax ? $add_form : drupal_render($add_form);

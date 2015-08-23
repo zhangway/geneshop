@@ -81,11 +81,9 @@ function geneshop_cart_menu() {
   );
   $items['basket/download'] = array(
     'title' => 'Download',
-    'page callback' => 'geneshop_cart_file_download',
-    'page arguments' => array(3),
-    'access callback' => 'geneshop_cart_basket_access',
-    'type' => MENU_CALLBACK,
-    'file' => 'geneshop_cart.pages.inc',
+    'page callback' => 'geneshop_cart_seq_extract_page',
+    'access arguments' => array('access chado_feature content'),
+    'type' => MENU_CALLBACK,,
   );
   $items['order/%node'] = array(
     'title' => 'Order page',

@@ -10,6 +10,8 @@ configure = admin/config/geneshop_cart
 files[] = views/geneshop_cart_handler_field_node_add_to_basket.inc
 files[] = views/geneshop_cart_handler_field_geneshop_order_items.inc
 
+dependencies[] = tripal_feature
+
 ; Information added by Drupal.org packaging script on 2014-06-06
 version = "7.x-1.9"
 core = "7.x"
