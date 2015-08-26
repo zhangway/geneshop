@@ -20,20 +20,38 @@ function geneshop_cart_add2basket($node, $type) {
       drupal_session_start();
     }
     $item = array();
-    $item['title'] = $node->title;
-    if (variable_get('geneshop_cart_show_qty', TRUE)) {
+    if ($node->type == 'chado_feature' && $node->feature->type_id->name == 'gene') {
+      $sql =<<<SQL
+            SELECT *
+            FROM  chado.gene
+            WHERE nid = :nid
+SQL;
+      $args = array(':nid' => $node->nid);
+      $result = db_query($sql, $args)->fetchObject();
+      $vars = get_object_vars ( $result );
+      $item['type']  = "gene";
+      $item['title'] = $result->name;
+      $item['content'] = $result->name. "~" . $result->coordinate . "~" . $result->start . "~" . $result->stop . "~" . $result->gene_family ."~" . $result->description;
+      $item['header'] = "Name~Chromosome~Start~End~Gene family~Description" ;    
+    } else {
+        $item['type']  = "item";
+        $item['title'] = $node->title;
+        $item['content'] = $node->title;
+        $item['header'] = "Title";
+    }
+    if (variable_get('lightshop_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
-    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
+/*    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
       if ($price <= 0 || !is_numeric($price)
       ) {
         drupal_set_message(t('Sorry, but this product currently unavailable
         for ordering'), 'warning');
         $item = FALSE;
-      }
+      }*/
       else {
         if (!isset($_SESSION['basket']['currency'])) {
-          $_SESSION['basket']['currency'] = variable_get('geneshop_cart_price_suffix', '');
+          $_SESSION['basket']['currency'] = variable_get('lightshop_price_suffix', '');
         }
         if (!isset($_SESSION['basket']['total_sum'])) {
           $_SESSION['basket']['total_sum'] = 0;
@@ -56,10 +74,25 @@ function geneshop_cart_add2basket($node, $type) {
     ajax_deliver($output);
   }
   else {
-    drupal_goto();
+      //drupal_goto();
   }
 }
-
+function generate_fasta($sql, $regex) {
+    $data = '';
+    foreach ($_SESSION['basket']['items'] as $nid => $value) {
+      $args = array(':nid' => $nid);
+      $result = db_query($sql, $args)->fetchObject();
+      if(strlen($result->residues)>0) {
+        $residues = preg_replace($regex, "$1\n", $result->residues);
+        $data .= ">".$result->name."\n".$residues."\n";
+      }
+    }
+    //data needs to be print as a plain text:
+    drupal_add_http_header('Content-Type: text/plain');
+    print $data;
+    // drupal_exit prompts a save dialog:
+    drupal_exit();
+}
 /**
  * Shared Ajax callback for basket page actions.
  */
@@ -82,7 +115,7 @@ function geneshop_cart_ajaxform_process() {
       break;
 
     case 'download':
-      $form = geneshop_cart_check_order(TRUE);
+      $form = geneshop_cart_download();
       $form['#action'] = 'basket/download';
       $title = t('Download');
       break;
@@ -105,7 +138,7 @@ function geneshop_cart_ajaxform_process() {
     $commands[] = ajax_command_html('#geneshop_cart-page-title *:first-child', $title);
   }
 
-  return array('#type' => 'ajax', '#commands' => $commands);
+  return array('#type' => '', '#commands' => $commands);
 }
 
 /**
@@ -204,7 +237,6 @@ function geneshop_cart_basket_form($form, &$form_state) {
 // Add botton on basket-page Tongta.
     $form['actions']['download'] = array(
       '#type' => 'submit',
-      '#submit' => array('_geneshop_cart_file_download'),
       '#value' => t('Download'),
       '#attributes' => array(
         'class' => array('download-button'),
@@ -300,34 +332,6 @@ function _geneshop_cart_update_total() {
 }
 
 /**
- * Implements hook_file_download().
- */
-function _geneshop_cart_file_download($node) {
-  global $user;
-
-  $data = t('sequence');
-  $file = file_save_data($data, $destination = NULL, $replace = FILE_EXISTS_RENAME);
-
-  
-
-  // Get the file record based on the URI. If not in the database just return.
-/*  $files = file_load_multiple(array(), array('uri' => $uri));
-  if (count($files)) {
-    foreach ($files as $item) {
-      // Since some database servers sometimes use a case-insensitive comparison
-      // by default, double check that the filename is an exact match.
-      if ($item -> uri === $uri) {
-        $file = $item;
-        break;
-      }
-    }
-  }*/
-  if (!isset($file)) {
-    return;
-  }
-}
-
-/**
  * Calling the download form.
  */
 function geneshop_cart_check_order($ajax = FALSE) {
@@ -397,3 +401,21 @@ function geneshop_cart_my_orders_page($account) {
   return $build;
 }
 
+function geneshop_cart_download($ajax = FALSE) {
+    $sql =<<<SQL
+            select f.name, f.residues
+            from chado.gene g,
+            chado.feature_relationship fr,
+            chado.feature f,
+            chado.cvterm cvt,
+                 public.chado_feature chf
+            where g.gene_id = fr.object_id
+                  and fr.subject_id = f.feature_id
+                  and g.gene_id = chf.feature_id
+                  and f.type_id = cvt.cvterm_id
+//                  and cvt.name = 'mRNA'
+            and chf.nid = :nid
+SQL;
+    $regex = "/([acgtACGT]{50})/";
+    generate_fasta($sql, $regex);
+}

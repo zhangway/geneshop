@@ -81,9 +81,10 @@ function geneshop_cart_menu() {
   );
   $items['basket/download'] = array(
     'title' => 'Download',
-    'page callback' => 'geneshop_cart_seq_extract_page',
-    'access arguments' => array('access chado_feature content'),
-    'type' => MENU_CALLBACK,,
+    'page callback' => 'geneshop_cart_download',
+    'access callback' => 'geneshop_cart_basket_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'geneshop_cart.pages.inc',
   );
   $items['order/%node'] = array(
     'title' => 'Order page',
@@ -734,4 +735,3 @@ function geneshop_cart_mail_send($node, $key) {
 
   drupal_mail('geneshop_cart', $key, $to, language_default(), $params, $from);
 }
-
