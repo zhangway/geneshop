@@ -1,10 +1,8 @@
 <?php
-
 /**
  * @file
  * Views hooks for Gene Shop.
  */
-
 /**
  * Implements hook_views_data_alter().
  */
@@ -28,7 +26,6 @@ function geneshop_cart_views_data_alter(&$data) {
     ),
   );
 }
-
 /**
  * Implements hook_views_data().
  */
@@ -88,6 +85,5 @@ function geneshop_cart_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
-
   return $data;
 }

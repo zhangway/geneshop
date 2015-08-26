@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Basket block content.
@@ -14,16 +13,15 @@
 ?>
 <?php
 if ($not_empty): ?>
-<div>
+  <div>
   <?php print $basket_items_list; ?>
   </div>
   <?php if ($total_sum): ?>
-<div>
-<?php print t('Total price: ') . $total_sum; ?>
-
-</div>
-<?php endif; ?>
-<div>
+    <div>
+    <?php print t('Total price: ') . $total_sum; ?>
+    </div>
+  <?php endif; ?>
+  <div>
   <?php print $basket_page_link; ?>
   </div>
 <?php

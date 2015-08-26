@@ -1,9 +1,7 @@
 <?php
-
 /**
  * Menu callbacks.
  */
-
 /**
  * Submit actions for add2basket link.
  */
@@ -37,13 +35,14 @@ SQL;
         $item['type']  = "item";
         $item['title'] = $node->title;
         $item['content'] = $node->title;
-        $item['header'] = "Name";
+        $item['header'] = "Title";
     }
     if (variable_get('geneshop_cart_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
     if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
-      if ($price <= 0 || !is_numeric($price)) {
+      if ($price <= 0 || !is_numeric($price)
+      ) {
         drupal_set_message(t('Sorry, but this product currently unavailable
         for ordering'), 'warning');
         $item = FALSE;
@@ -76,7 +75,6 @@ SQL;
       //drupal_goto();
   }
 }
-
 function generate_fasta($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
@@ -85,7 +83,7 @@ function generate_fasta($sql, $regex) {
       if(strlen($result->residues)>0) {
         $residues = preg_replace($regex, "$1\n", $result->residues);
         $data .= ">".$result->name."\n".$residues."\n";
-      }
+      } 
     }
     //data needs to be print as a plain text:
     drupal_add_http_header('Content-Type: text/plain');
@@ -118,10 +116,15 @@ function geneshop_cart_ajaxform_process() {
       $title = t('Checkout');
       break;
       */
-    case 'download':
-      $form = geneshop_cart_download();
-      $form['#action'] = 'basket/download';
-      $title = t('Download');
+    case 'polypeptides':
+      $form = geneshop_cart_polypeptides();
+      $form['#action'] = 'basket/polypeptides';
+      $title = t('Polypeptides');
+      break;
+    case 'mrna':      
+      $form = geneshop_cart_mrna();
+      $form['#action'] = 'basket/mrna';
+      $title = t('mRNA');
       break;
     default:
       drupal_process_form($form['#form_id'], $form, $form_state);
@@ -156,7 +159,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
     drupal_set_title(t('Your basket is empty'));
     $form['empty'] = array(
       '#type' => 'markup',
-      '#markup' => t('There is nothing in your basket at the moment.'),
+      '#markup' => t('<p>There is nothing in your basket at the moment.</p>'),
     );
   }
   else {
@@ -168,12 +171,11 @@ function geneshop_cart_basket_form($form, &$form_state) {
       'path' => 'geneshop_cart/ajax',
       'wrapper' => $form['#id'],
     );
-
     $form['clear'] = array(
       '#type' => 'submit',
       '#value' => t('Clear the basket'),
       '#name' => 'clear',
-      '#ajax' => $ajax_settings,
+      //'#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('clear-button'),
       ),
@@ -187,11 +189,12 @@ function geneshop_cart_basket_form($form, &$form_state) {
         '#type' => 'link',
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
-      );  // Tongta
+      );
       if (isset($data['qty'])) {
         $form['items'][$nid]['qty'] = array(
-          '#type' => 'checkbox',
+          '#type' => 'textfield',
           '#default_value' => $data['qty'],
+          '#size' => 4,
           '#element_validate' => array('_geneshop_cart_qty_element_validate'),
           '#attributes' => array(
             'class' => array('qty'),
@@ -214,22 +217,52 @@ function geneshop_cart_basket_form($form, &$form_state) {
         'class' => array('geneshop_cart-form-actions'),
       ),
     );
+    $form['actions']['back'] = array (
+        '#type' => 'submit',
+        '#value' => t('Go Back'),
+        '#name' => 'view',
+        '#attributes' => array(
+            'class' => array('back-button'),
+            'redirect' => ($_SESSION['view_page']), //need to be in ()
+        ),
+    );
+    /*
+    $form['actions']['checkout'] = array(
+      '#type' => 'submit',
+      '#name' => 'checkout',
+      '#value' => t('Checkout'),
+      '#ajax' => $ajax_settings,
+      '#attributes' => array(
+        'class' => array('checkout-button'),
+      ),
+    );
+    */
+    // switch off ajax for :
+    $form['actions']['polypeptides'] = array(
+        '#type' => 'submit',
+        '#name' => 'polypeptides',
+        '#value' => t('Polypeptides'),
+        //'#ajax' => $ajax_settings,
+        '#attributes' => array(
+            'class' => array('checkout-button'),
+        ),
+    );
+    $form['actions']['mrna'] = array(
+        '#type' => 'submit',
+        '#name' => 'mrna',
+        '#value' => t('mRNA'),
+        //'#ajax' => $ajax_settings,
+        '#attributes' => array(
+            'class' => array('checkout-button'),
+        ),
+    );
     $form['actions']['update'] = array(
       '#type' => 'submit',
       '#submit' => array('_geneshop_cart_basket_update'),
-      '#value' => t('Update'),
-      '#ajax' => $ajax_settings,
+      '#value' => t('Remove'),
+//      '#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('update-button'),
-      ),
-    );
-// Add botton on basket-page Tongta.
-    $form['actions']['download'] = array(
-      '#type' => 'submit',
-      '#name' => 'download',
-      '#value' => t('Download'),
-      '#attributes' => array(
-        'class' => array('download-button'),
       ),
     );
     $form['#validate'][] = 'geneshop_cart_check_empty_basket';
@@ -244,16 +277,14 @@ function geneshop_cart_basket_form($form, &$form_state) {
   }
   return $form;
 }
-
 /**
- * Basket page form qty element validate callback. Tongta
+ * Basket page form qty element validate callback.
  */
 function _geneshop_cart_qty_element_validate($element, &$form_state, $form) {
   if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
     form_error($element, t('Incorrect value of qty'));
   }
 }
-
 /**
  * Basket page form submit callback.
  */
@@ -262,13 +293,19 @@ function geneshop_cart_basket_form_submit($form, &$form_state) {
     case 'clear':
       $form_state['redirect'] = 'basket/clear';
       break;
-
-    case 'download':
-      $form_state['redirect'] = 'basket/download';
+      /*
+    case 'checkout':
+      $form_state['redirect'] = 'basket/checkout';
+      break;
+      */
+    case 'polypeptides':
+      $form_state['redirect'] = 'basket/polypeptides';
+      break;
+    case 'mrna':
+      $form_state['redirect'] = 'basket/mrna';
       break;
   }
 }
-
 /**
  * Handling data update form the basket page.
  */
@@ -302,7 +339,6 @@ function _geneshop_cart_basket_update($form, &$form_state) {
     _geneshop_cart_update_total();
   }
 }
-
 /**
  * Updating total sum of basket items.
  */
@@ -318,16 +354,42 @@ function _geneshop_cart_update_total() {
     $_SESSION['basket']['total_sum'] = $sum;
   }
 }
-
 /**
- * Calling the download form.
- */
-/*function geneshop_cart_checkout($ajax = FALSE) {
+ * Calling the checkout form.
+*/
+/*
+function geneshop_cart_checkout($ajax = FALSE) {
   module_load_include('inc', 'node', 'node.pages');
   $add_form = node_add('geneshop_cart_order');
   return $ajax ? $add_form : drupal_render($add_form);
-}*/
-function geneshop_cart_download($ajax = FALSE) {
+}
+*/
+function geneshop_cart_polypeptides() {
+        $sql =<<<SQL
+            select f2.name, f2.residues
+            from chado.gene g,
+            chado.feature_relationship fr,
+            chado.feature f,
+            public.chado_feature chf,
+            chado.cvterm cvt,
+            chado.feature f2,
+            chado.feature_relationship fr2,
+                   chado.cvterm cvt2
+              where g.gene_id = fr.object_id
+                    and fr.subject_id = f.feature_id
+                    and g.gene_id = chf.feature_id
+                    and f.type_id = cvt.cvterm_id
+                    and cvt.name =  'mRNA'
+                    and f.feature_id = fr2.object_id
+                    and fr2.subject_id = f2.feature_id
+                    and f2.type_id = cvt2.cvterm_id
+                    and cvt2.name ='polypeptide'
+                    and chf.nid = :nid
+SQL;
+    $regex = "/([a-zA-Z]{80})/";
+    generate_fasta($sql, $regex);
+}
+function geneshop_cart_mrna($ajax = FALSE) {
     $sql =<<<SQL
             select f.name, f.residues
             from chado.gene g,
@@ -359,16 +421,14 @@ function _geneshop_cart_clear_confirm($form, &$form_state) {
     );
   }
 }
-
 /**
  * Confirmation form submit callback.
  */
 function _geneshop_cart_clear_confirm_submit($form, &$form_state) {
   unset($_SESSION['basket']);
   drupal_set_message(t('Your basket is cleared'));
-  drupal_goto('basket');
+  drupal_goto($_SESSION['view_page']);
 }
-
 /**
  * Helper function to check the access code when referring to a specific order.
  */
@@ -381,13 +441,11 @@ function _geneshop_cart_get_my_order($node) {
   }
   drupal_not_found();
 }
-
 /**
  * Menu callback; displays page containing recent orders of a given user.
  */
 function geneshop_cart_my_orders_page($account) {
   drupal_set_title(t("@name's Order History", array('@name' => format_username($account))), PASS_THROUGH);
-
   $build = array();
   $query = db_select('node', 'n')->extend('PagerDefault');
   $nids = $query->fields('n', array('nid', 'sticky', 'created'))->condition('type', geneshop_cart_ORDER_NODETYPE)->condition('uid', $account->uid)->condition('status', 1)->orderBy('created', 'DESC')->limit(variable_get('default_nodes_main', 10))->addTag('node_access')->execute()->fetchCol();
@@ -402,6 +460,5 @@ function geneshop_cart_my_orders_page($account) {
   else {
     drupal_set_message(t('You have no orders for this account.'));
   }
-
   return $build;
 }

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Page callbacks for module main settings.
@@ -13,16 +12,13 @@ function geneshop_cart_admin_settings($form, &$form_state) {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
-
-// Inactivate the e-mail function Tongta.
-/*  $form['general']['geneshop_cart_basket_email'] = array(
+  $form['general']['geneshop_cart_basket_email'] = array(
     '#type' => 'textfield',
     '#title' => t('E-mail'),
     '#required' => TRUE,
     '#default_value' => variable_get('geneshop_cart_basket_email', variable_get('site_mail', ini_get('sendmail_from'))),
     '#description' => t('E-mail address to which the order will be sent.'),
-  ); */
-
+  );
   $form['general']['geneshop_cart_order_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Order title'),
@@ -36,7 +32,6 @@ function geneshop_cart_admin_settings($form, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-
   $info = token_info();
   $tokens = array();
   foreach ($info['tokens']['node'] as $name => $token) {
@@ -45,13 +40,10 @@ function geneshop_cart_admin_settings($form, &$form_state) {
     }
     $tokens[] = '[node:' . $name . '] - ' . $token['description'];
   }
-
   $form['general']['title_tokens']['list'] = array(
     '#markup' => implode('<br />', $tokens),
   );
-
   $options = node_type_get_names();
-
   unset($options[geneshop_cart_ORDER_NODETYPE]);
   $form['general']['geneshop_cart_node_types'] = array(
     '#type' => 'checkboxes',
@@ -64,10 +56,7 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       'wrapper' => 'geneshop_cart_settings_form-wrapper',
     ),
   );
-
-
   $basket_types = isset($form_state['values']['geneshop_cart_node_types']) ? array_keys(array_filter($form_state['values']['geneshop_cart_node_types'])) : variable_get('geneshop_cart_node_types', array());
-
   if ($basket_types) {
     $form['display_options'] = array(
       '#type' => 'fieldset',
@@ -125,7 +114,6 @@ function geneshop_cart_admin_settings($form, &$form_state) {
       }
     }
   }
-
   $form['array_filter'] = array(
     '#type' => 'value',
     '#value' => TRUE,
@@ -133,11 +121,9 @@ function geneshop_cart_admin_settings($form, &$form_state) {
   $form['#submit'] = array('drupal_flush_all_caches');
   return system_settings_form($form);
 }
-
 function geneshop_cart_settings_form_ajax_callback($form, &$form_state) {
   return $form;
 }
-
 function geneshop_cart_admin_settings_validate($form, &$form_state) {
   $values = &$form_state['values'];
   $types = array_filter($values['geneshop_cart_node_types']);
@@ -161,7 +147,6 @@ function geneshop_cart_admin_settings_validate($form, &$form_state) {
     $form_state['redirect'] = 'admin/config/geneshop_cart/mail';
   }
 }
-
 function geneshop_cart_admin_mail_settings($form, &$form_state) {
   $form['#prefix'] = t('Showing only those fields that can be displayed in plain text in emails.');
   $form['user'] = array(
@@ -208,6 +193,5 @@ function geneshop_cart_admin_mail_settings($form, &$form_state) {
       '#value' => TRUE,
     );
   }
-
   return system_settings_form($form);
 }

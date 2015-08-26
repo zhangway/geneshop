@@ -13,8 +13,6 @@ define('geneshop_cart_ORDER_NODETYPE', 'geneshop_cart_order');
 
 /**
  * Implements hook_permission().
- *
- * Allow user manage their basket in 'basket page'.
  */
 function geneshop_cart_permission() {
   return array(
@@ -57,7 +55,7 @@ function geneshop_cart_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   $items['basket'] = array(
-    'title' => 'Your Basket',
+    'Title' => 'Your Basket',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('geneshop_cart_basket_form'),
     'access callback' => 'user_access',
@@ -79,13 +77,32 @@ function geneshop_cart_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'geneshop_cart.pages.inc',
   );
-  $items['basket/download'] = array(
-    'title' => 'Download',
-    'page callback' => 'geneshop_cart_download',
+  /*
+  $items['basket/checkout'] = array(
+    'title' => 'Checkout',
+    'page callback' => 'geneshop_cart_checkout',
     'access callback' => 'geneshop_cart_basket_access',
     'type' => MENU_CALLBACK,
     'file' => 'geneshop_cart.pages.inc',
   );
+  */
+
+  $items['basket/polypeptides'] = array(
+      'title' => 'Polypeptides',
+      'page callback' => 'geneshop_cart_polypeptides',
+      'access callback' => 'geneshop_cart_basket_access',
+      'type' => MENU_CALLBACK,
+      'file' => 'geneshop_cart.pages.inc',
+  );
+
+  $items['basket/mrna'] = array(
+      'title' => 'mRNA',
+      'page callback' => 'geneshop_cart_mrna',
+      'access callback' => 'geneshop_cart_basket_access',
+      'type' => MENU_CALLBACK,      
+      'file' => 'geneshop_cart.pages.inc',
+  );
+  
   $items['order/%node'] = array(
     'title' => 'Order page',
     'page callback' => '_geneshop_cart_get_my_order',
@@ -146,7 +163,15 @@ function geneshop_cart_preprocess_page(&$vars) {
 /**
  * Create a «add to basket» link for display in the node body.
  */
-function geneshop_cart_add2basket_link($nid) {
+function geneshop_cart_add2basket_link($nid, $type) {
+  $_SESSION['feat_type'] = $type;
+  if ($type == "gene") {
+    $_SESSION['block_view_text'] = t("Your Basket</br><small>(Use this to get sequences or information for a list of genes. Add by 'Add to Basket' in the table below.)</small>"); 
+  } else {
+    $_SESSION['block_view_text'] = t("Your Basket");
+  }
+
+
   $build = array();
   if (_geneshop_cart_in_basket($nid)) {
     $build['add2basket_link'] = array(
@@ -232,13 +257,15 @@ function geneshop_cart_field_extra_fields() {
  * Implements hook_node_view().
  */
 function geneshop_cart_node_view($node, $view_mode, $langcode) {
+  // TOC link:
   $extra_fields = field_extra_fields_get_display('node', $node->type, $view_mode
   );
   if (user_access('use basket') && isset($extra_fields['geneshop_cart_add2basket'])
     && $extra_fields['geneshop_cart_add2basket']['visible']
   ) {
+    // Add to basket button:
     $node->content['geneshop_cart_add2basket'] = array(
-      '#markup' => geneshop_cart_add2basket_link($node->nid)
+        '#markup' => geneshop_cart_add2basket_link($node->nid, $_SESSION['feat_type']),
     );
   }
 }
@@ -515,7 +542,7 @@ function geneshop_cart_block_view() {
     return;
   }
   $block = array();
-  $block['subject'] = t('Your Basket');
+  $block['subject'] = $_SESSION['block_view_text'] ? $_SESSION['block_view_text'] : t("Your Basket");
   $block['content'] = geneshop_cart_block_content();
   return $block;
 }
@@ -535,12 +562,12 @@ function geneshop_cart_block_content() {
 /**
  * Implements hook_form_alter().
  */
-/*function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
+function geneshop_cart_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == geneshop_cart_ORDER_NODETYPE . '_node_form' && empty($form['nid']['#value'])) {
     $form['#prefix'] = '<div id="new-order-add-form">';
     $form['#suffix'] = '</div>';
     unset($form['actions']['preview']);
-    $form['actions']['submit']['#value'] = t('Confirm Download');
+    $form['actions']['submit']['#value'] = t('Send order');
     $form['actions']['submit']['#submit'][0] = 'geneshop_cart_node_form_submit';
     $form['actions']['submit']['#name'] = 'new_order';
     $form['actions']['submit']['#ajax'] = array(
@@ -549,7 +576,7 @@ function geneshop_cart_block_content() {
     );
     form_load_include($form_state, 'inc', 'node', 'node.pages');
   }
-}*/
+}
 
 /**
  * Form submission handler for order node types.
@@ -634,8 +661,8 @@ function geneshop_cart_node_info() {
  * Helper function. Returns header array for basket items in table display.
  */
 function _geneshop_cart_basket_items_header() {
-  $header = array();
-  $header['title'] = t('Name');
+  $header = array();  
+  $header['title'] = t('Title');
   if (variable_get('geneshop_cart_show_qty', TRUE)) {
     $header['qty'] = t('Qty');
   }
@@ -654,7 +681,7 @@ function geneshop_cart_form($node, &$form_state) {
   }
   global $user;
   if (!isset($node->nid)) {
-    drupal_set_title(t('Download'));
+    drupal_set_title(t('Checkout page'));
   }
   $basket = isset($node->nid) ? $node->order_items : $_SESSION['basket'];
 
