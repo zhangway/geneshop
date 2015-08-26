@@ -37,21 +37,20 @@ SQL;
         $item['type']  = "item";
         $item['title'] = $node->title;
         $item['content'] = $node->title;
-        $item['header'] = "Title";
+        $item['header'] = "Name";
     }
-    if (variable_get('lightshop_show_qty', TRUE)) {
+    if (variable_get('geneshop_cart_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
-/*    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
-      if ($price <= 0 || !is_numeric($price)
-      ) {
+    if (variable_get('geneshop_cart_show_price', FALSE) && ($price = _geneshop_cart_get_price($node))) {
+      if ($price <= 0 || !is_numeric($price)) {
         drupal_set_message(t('Sorry, but this product currently unavailable
         for ordering'), 'warning');
         $item = FALSE;
-      }*/
+      }
       else {
         if (!isset($_SESSION['basket']['currency'])) {
-          $_SESSION['basket']['currency'] = variable_get('lightshop_price_suffix', '');
+          $_SESSION['basket']['currency'] = variable_get('geneshop_cart_price_suffix', '');
         }
         if (!isset($_SESSION['basket']['total_sum'])) {
           $_SESSION['basket']['total_sum'] = 0;
@@ -77,6 +76,7 @@ SQL;
       //drupal_goto();
   }
 }
+
 function generate_fasta($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
@@ -103,27 +103,29 @@ function geneshop_cart_ajaxform_process() {
   }
   $commands = array();
   $title = '';
-
   list($form, $form_state) = ajax_get_form();
   $element_name = $form_state['input']['_triggering_element_name'];
-
   switch ($element_name) {
     case 'clear':
       $form = drupal_get_form('_geneshop_cart_clear_confirm');
       $form['#action'] = 'basket/clear';
       $title = t('Do you really want to delete all items from the basket?');
       break;
-
+      /*
+    case 'checkout':
+      $form = geneshop_cart_checkout(TRUE);
+      $form['#action'] = 'basket/checkout';
+      $title = t('Checkout');
+      break;
+      */
     case 'download':
       $form = geneshop_cart_download();
       $form['#action'] = 'basket/download';
       $title = t('Download');
       break;
-
     default:
       drupal_process_form($form['#form_id'], $form, $form_state);
   }
-
   if ($element_name == 'new_order' && !form_get_errors()) {
     $form = array(
       'type' => 'item',
@@ -131,16 +133,12 @@ function geneshop_cart_ajaxform_process() {
     );
     $title = t('Your order has been successfully created');
   }
-
   $commands[] = ajax_command_replace(NULL, render($form));
-
   if ($title) {
     $commands[] = ajax_command_html('#geneshop_cart-page-title *:first-child', $title);
   }
-
   return array('#type' => '', '#commands' => $commands);
 }
-
 /**
  * The form that displays the contents of basket and control buttons.
  */
@@ -149,12 +147,12 @@ function geneshop_cart_basket_form($form, &$form_state) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), '');
   // Link to current URL.
-  $breadcrumb[] = l(drupal_get_title(), current_path());
+  $breadcrumb[] = l("Basket", current_path());
   // Set Breadcrumbs.
   drupal_set_breadcrumb($breadcrumb);
-
   // Check for empty session.
   if (!isset($_SESSION['basket']['items'])) {
+    drupal_goto($_SESSION['view_page']);
     drupal_set_title(t('Your basket is empty'));
     $form['empty'] = array(
       '#type' => 'markup',
@@ -180,45 +178,36 @@ function geneshop_cart_basket_form($form, &$form_state) {
         'class' => array('clear-button'),
       ),
     );
-
     $form['items'] = array(
       '#tree' => TRUE,
       '#theme' => 'geneshop_cart_items_form',
     );
-
     foreach ($_SESSION['basket']['items'] as $nid => $data) {
       $form['items'][$nid]['title'] = array(
         '#type' => 'link',
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
       );  // Tongta
-//      if (isset($data['qty'])) {
-//        $form['items'][$nid]['qty'] = array(
-//          '#type' => 'checkbox',
-//          '#default_value' => $data['qty'],
-//          '#element_validate' => array('_geneshop_cart_qty_element_validate'),
-//          '#attributes' => array(
-//            'class' => array('qty'),
-//          ),
-//        );
-//      }
-//      if (isset($data['price'])) {
-//        $form['items'][$nid]['price'] = array(
-//          '#markup' => _geneshop_cart_get_price_numberformat($data['price']),
-//          '#size' => 5,
-//        );
-//      }
-      $form['items'][$nid]['mRNA'] = array(
-        '#type' => 'checkbox',
-      );
-      $form['items'][$nid]['CDs'] = array(
-        '#type' => 'checkbox',
-      );
+      if (isset($data['qty'])) {
+        $form['items'][$nid]['qty'] = array(
+          '#type' => 'checkbox',
+          '#default_value' => $data['qty'],
+          '#element_validate' => array('_geneshop_cart_qty_element_validate'),
+          '#attributes' => array(
+            'class' => array('qty'),
+          ),
+        );
+      }
+      if (isset($data['price'])) {
+        $form['items'][$nid]['price'] = array(
+          '#markup' => _geneshop_cart_get_price_numberformat($data['price']),
+          '#size' => 5,
+        );
+      }
       $form['items'][$nid]['del'] = array(
         '#type' => 'checkbox',
       );
     }
-
     $form['actions'] = array(
       '#type' => 'actions',
       '#attributes' => array(
@@ -237,6 +226,7 @@ function geneshop_cart_basket_form($form, &$form_state) {
 // Add botton on basket-page Tongta.
     $form['actions']['download'] = array(
       '#type' => 'submit',
+      '#name' => 'download',
       '#value' => t('Download'),
       '#attributes' => array(
         'class' => array('download-button'),
@@ -263,15 +253,6 @@ function _geneshop_cart_qty_element_validate($element, &$form_state, $form) {
     form_error($element, t('Incorrect value of qty'));
   }
 }
-
-/**
- * Basket page form CDs element validate callback. Tongta
- */
-//function _geneshop_cart_CDs_element_validate($element, &$form_state, $form) {
-//  if (!filter_var($element['#value'], FILTER_VALIDATE_INT) || $element['#value'] <= 0) {
-//    form_error($element, t('Incorrect value of CDs'));
-//  }
-//}
 
 /**
  * Basket page form submit callback.
@@ -329,17 +310,41 @@ function _geneshop_cart_update_total() {
   if (empty($_SESSION['basket']['items'])) {
     unset($_SESSION['basket']);
   }
+  elseif (variable_get('geneshop_cart_show_price', FALSE) && variable_get('geneshop_cart_price_field', '')) {
+    $sum = 0;
+    foreach ($_SESSION['basket']['items'] as $item) {
+      $sum += $item['price'];
+    }
+    $_SESSION['basket']['total_sum'] = $sum;
+  }
 }
 
 /**
  * Calling the download form.
  */
-function geneshop_cart_check_order($ajax = FALSE) {
+/*function geneshop_cart_checkout($ajax = FALSE) {
   module_load_include('inc', 'node', 'node.pages');
   $add_form = node_add('geneshop_cart_order');
   return $ajax ? $add_form : drupal_render($add_form);
+}*/
+function geneshop_cart_download($ajax = FALSE) {
+    $sql =<<<SQL
+            select f.name, f.residues
+            from chado.gene g,
+            chado.feature_relationship fr,
+            chado.feature f,
+            chado.cvterm cvt,
+                 public.chado_feature chf
+            where g.gene_id = fr.object_id
+                  and fr.subject_id = f.feature_id
+                  and g.gene_id = chf.feature_id
+                  and f.type_id = cvt.cvterm_id
+                  and cvt.name = 'mRNA'
+            and chf.nid = :nid
+SQL;
+    $regex = "/([acgtACGT]{80})/";
+    generate_fasta($sql, $regex);
 }
-
 /**
  * Confirmation form when cleaning basket.
  */
@@ -399,23 +404,4 @@ function geneshop_cart_my_orders_page($account) {
   }
 
   return $build;
-}
-
-function geneshop_cart_download($ajax = FALSE) {
-    $sql =<<<SQL
-            select f.name, f.residues
-            from chado.gene g,
-            chado.feature_relationship fr,
-            chado.feature f,
-            chado.cvterm cvt,
-                 public.chado_feature chf
-            where g.gene_id = fr.object_id
-                  and fr.subject_id = f.feature_id
-                  and g.gene_id = chf.feature_id
-                  and f.type_id = cvt.cvterm_id
-//                  and cvt.name = 'mRNA'
-            and chf.nid = :nid
-SQL;
-    $regex = "/([acgtACGT]{50})/";
-    generate_fasta($sql, $regex);
 }
