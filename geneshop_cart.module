@@ -94,7 +94,6 @@ function geneshop_cart_menu() {
       'type' => MENU_CALLBACK,
       'file' => 'geneshop_cart.pages.inc',
   );
-
   $items['basket/mrna'] = array(
       'title' => 'mRNA',
       'page callback' => 'geneshop_cart_mrna',
@@ -102,15 +101,13 @@ function geneshop_cart_menu() {
       'type' => MENU_CALLBACK,      
       'file' => 'geneshop_cart.pages.inc',
   );
-
   $items['basket/gene'] = array(
     'title' => 'Gene',
     'page callback' => 'geneshop_cart_gene',
-    'access callback' => geneshop_cart_basket_access',
+    'access callback' => 'geneshop_cart_basket_access',
     'type' => MENU_CALLBACK,
-    'file => 'geneshop_cart.pages.inc',
+    'file' => 'geneshop_cart.pages.inc',
   );
-  
   $items['order/%node'] = array(
     'title' => 'Order page',
     'page callback' => '_geneshop_cart_get_my_order',
@@ -542,7 +539,7 @@ function geneshop_cart_block_view() {
     return;
   }
   $block = array();
-  $block['subject'] = $_SESSION['block_view_text'] ? $_SESSION['block_view_text'] : t("Your Basket");
+  $block['subject'] = t("Your Basket");
   $block['content'] = geneshop_cart_block_content();
   return $block;
 }
