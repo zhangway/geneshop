@@ -5,7 +5,7 @@
 /**
  * Preprocess for view basket in block mode.
  */
-function theme_geneshop_cart_generate_table($vars) {
+function theme_geneshop_generate_table($vars) {
     $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
     $items = array();
     $header = array();
@@ -23,13 +23,13 @@ function theme_geneshop_cart_generate_table($vars) {
     $headers = explode("~",$header[0]);
     return array($basket_items, $cols, $headers);
 }
-function template_preprocess_geneshop_cart_block_display(&$vars) {
-  drupal_add_css(drupal_get_path('module', 'geneshop_cart') . '/theme/geneshop_cart.css');
+function template_preprocess_geneshop_block_display(&$vars) {
+  drupal_add_css(drupal_get_path('module', 'geneshop') . '/theme/geneshop.css');
   preg_match('/ajax/', current_path(), $matches);
   if(!count($matches)){
     $_SESSION['view_page'] = current_path();
   }
-  list($basket_items, $cols, $headers) = theme_geneshop_cart_generate_table($vars);
+  list($basket_items, $cols, $headers) = theme_geneshop_generate_table($vars);
   $vars['not_empty'] = !empty($basket_items);
   $vars['count_items'] = $basket_items ? count($_SESSION['basket']['items']) : 0;
   $items_list = array(
@@ -51,11 +51,11 @@ function template_preprocess_geneshop_cart_block_display(&$vars) {
   //rendering multiple baskets:
   //$vars['basket_items_list'] = $basket_items ? drupal_render($items_list) . drupal_render($items_list2) : '';
   $vars['basket_items_list'] = $basket_items ? drupal_render($items_list) : '';
-  $vars['total_sum'] = isset($_SESSION['basket']['total_sum']) ? _geneshop_cart_get_price_numberformat($_SESSION['basket']['total_sum']) : FALSE;
+  $vars['total_sum'] = isset($_SESSION['basket']['total_sum']) ? _geneshop_get_price_numberformat($_SESSION['basket']['total_sum']) : FALSE;
   $vars['basket_page_link'] = $basket_items ? l(t('Go to basket page'), 'basket') : '';
 }
-function theme_geneshop_cart_items_form($vars) {
-  list($basket_items, $cols, $header) = theme_geneshop_cart_generate_table($vars);
+function theme_geneshop_items_form($vars) {
+  list($basket_items, $cols, $header) = theme_geneshop_generate_table($vars);
   $header['del'] = t('Remove');
   $element = $vars['element'];
   foreach($cols as $nid => $c) {
@@ -76,8 +76,8 @@ function theme_geneshop_cart_items_form($vars) {
     'rows' => $cols,
   ));
 }
-function theme_geneshop_cart_items_form_o($vars) {
-  $header = _geneshop_cart_basket_items_header();
+function theme_geneshop_items_form_o($vars) {
+  $header = _geneshop_basket_items_header();
   $header['del'] = t('Remove');
   $element = $vars['element'];
   $rows = array();
@@ -97,7 +97,7 @@ function theme_geneshop_cart_items_form_o($vars) {
           'colspan' => 2,
         ),
         array(
-          'data' => _geneshop_cart_get_price_numberformat($_SESSION['basket']['total_sum']),
+          'data' => _geneshop_get_price_numberformat($_SESSION['basket']['total_sum']),
           'colspan' => 2,
         ),
       ),
@@ -109,14 +109,14 @@ function theme_geneshop_cart_items_form_o($vars) {
       'rows' => $rows,
     ));
 }
-function theme_geneshop_cart_items_table($vars) {
+function theme_geneshop_items_table($vars) {
   
-  $header = _geneshop_cart_basket_items_header();
+  $header = _geneshop_basket_items_header();
   $rows = $vars['basket']['items'];
   if (isset($vars['basket']['total_sum'])) {
     $currency = isset($vars['basket']['currency']) ? $vars['basket']['currency'] : '';
     foreach ($rows as $nid => $row) {
-      $rows[$nid]['price'] = _geneshop_cart_get_price_numberformat($row['price'], $currency);
+      $rows[$nid]['price'] = _geneshop_get_price_numberformat($row['price'], $currency);
     }
     $rows[] = array(
       'data' => array(
@@ -124,7 +124,7 @@ function theme_geneshop_cart_items_table($vars) {
           'data' => t('Order total sum'),
           'colspan' => count($header) - 1,
         ),
-        _geneshop_cart_get_price_numberformat($vars['basket']['total_sum'], $currency),
+        _geneshop_get_price_numberformat($vars['basket']['total_sum'], $currency),
       ),
     );
   }
@@ -144,7 +144,7 @@ function theme_geneshop_cart_items_table($vars) {
   );
   return drupal_render($items_table); 
 }
-function theme_geneshop_cart_mail_notice($vars) {
+function theme_geneshop_mail_notice($vars) {
   $output = array();
   if ($vars['destination'] == 'site') {
     $output[] = t('New order from the site "@site"', array('@site' => variable_get('site_name')));
@@ -169,7 +169,7 @@ function theme_geneshop_cart_mail_notice($vars) {
 /**
  * Preprocess for mail notice template.
  */
-function template_preprocess_geneshop_cart_mail_notice(&$vars, $hook) {
+function template_preprocess_geneshop_mail_notice(&$vars, $hook) {
   $node = $vars['node'];
   $vars['view_order_link'] = url('order/' . $node->nid, array('query' => array('c' => $node->order_code), 'absolute' => TRUE));
   $vars['order_mail'] = $node->order_mail;
@@ -180,13 +180,13 @@ function template_preprocess_geneshop_cart_mail_notice(&$vars, $hook) {
       $output .= ' | ' . t('qty: @qty', array('@qty' => $item['qty']));
     }
     if (isset($item['price'])) {
-      $output .= ' | ' . t('price: @price ', array('@price' => _geneshop_cart_get_price_numberformat($item['price'])));
+      $output .= ' | ' . t('price: @price ', array('@price' => _geneshop_get_price_numberformat($item['price'])));
     }
     $vars['order_items'] .= $output . "\n";
   }
-  $vars['total_sum'] = isset($node->order_items['total_sum']) ? _geneshop_cart_get_price_numberformat($node->order_items['total_sum']) : '';
-  if ($fields = variable_get('geneshop_cart_mail_fields_' . $vars['destination'], array())) {
-    $instances = field_info_instances('node', geneshop_cart_ORDER_NODETYPE);
+  $vars['total_sum'] = isset($node->order_items['total_sum']) ? _geneshop_get_price_numberformat($node->order_items['total_sum']) : '';
+  if ($fields = variable_get('geneshop_mail_fields_' . $vars['destination'], array())) {
+    $instances = field_info_instances('node', geneshop_ORDER_NODETYPE);
     $fields_data = '';
     foreach ($fields as $field) {
       if ($field_array = $node->{$field}[LANGUAGE_NONE]) {

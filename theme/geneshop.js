@@ -1,7 +1,7 @@
 (function($) {
-  Drupal.behaviors.geneshop_cart = {
+  Drupal.behaviors.geneshop = {
     attach: function(context, settings) {
-      var basketForm = $('form.geneshop_cart_basket');
+      var basketForm = $('form.geneshop_basket');
       var updBtn = $('input.update-button', basketForm);
       var backBtn = $('input.back-button', basketForm);
       var backBtn2 = $('input.back-button-2', basketForm);

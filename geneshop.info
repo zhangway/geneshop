@@ -5,10 +5,10 @@ description = Ajaxify Gene Shop module for Drupal. Provides the ability to add n
 core = 7.x
 project = "geneshop_project"
 
-configure = admin/config/geneshop_cart
+configure = admin/config/geneshop
 
-files[] = views/geneshop_cart_handler_field_node_add_to_basket.inc
-files[] = views/geneshop_cart_handler_field_geneshop_order_items.inc
+files[] = views/geneshop_handler_field_node_add_to_basket.inc
+files[] = views/geneshop_handler_field_geneshop_order_items.inc
 
 dependencies[] = tripal_feature
 

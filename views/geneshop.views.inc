@@ -6,7 +6,7 @@
 /**
  * Implements hook_views_data_alter().
  */
-function geneshop_cart_views_data_alter(&$data) {
+function geneshop_views_data_alter(&$data) {
   $data['node']['add_to_basket'] = array(
     'title' => t('Basket button'),
     'help' => t('The button "add to basket" for nodes that are defined as goods.'),
@@ -22,22 +22,22 @@ function geneshop_cart_views_data_alter(&$data) {
           'field' => 'type',
         ),
       ),
-      'handler' => 'geneshop_cart_handler_field_node_add_to_basket',
+      'handler' => 'geneshop_handler_field_node_add_to_basket',
     ),
   );
 }
 /**
  * Implements hook_views_data().
  */
-function geneshop_cart_views_data() {
-  $data['geneshop_cart_order']['table']['group'] = t('Gene Shop');
-  $data['geneshop_cart_order']['table']['join'] = array(
+function geneshop_views_data() {
+  $data['geneshop_order']['table']['group'] = t('Gene Shop');
+  $data['geneshop_order']['table']['join'] = array(
     'node' => array(
       'left_field' => 'nid',
       'field' => 'nid',
     ),
   );
-  $data['geneshop_cart_order']['oid'] = array(
+  $data['geneshop_order']['oid'] = array(
     'title' => t('Order: ID'),
     'help' => t('The order ID.'),
     'field' => array(
@@ -51,7 +51,7 @@ function geneshop_cart_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
-  $data['geneshop_cart_order']['mail'] = array(
+  $data['geneshop_order']['mail'] = array(
     'title' => t('Order: Mail'),
     'help' => t('E-mail that has been specified by the customer when ordering.'),
     'field' => array(
@@ -68,11 +68,11 @@ function geneshop_cart_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
-  $data['geneshop_cart_order']['items'] = array(
+  $data['geneshop_order']['items'] = array(
     'title' => t('Order: Items'),
     'help' => t('The order items or the total amount.'),
     'field' => array(
-      'handler' => 'geneshop_cart_handler_field_geneshop_cart_order_items',
+      'handler' => 'geneshop_handler_field_geneshop_order_items',
       'click sortable' => TRUE,
     ),
     'sort' => array(

@@ -8,7 +8,7 @@
 /**
  * Implement hook_enable().
  */
-function geneshop_cart_enable() {
+function geneshop_enable() {
   // Rebuilding the node access database for applying
   // implementations hook_node_grants() and hook_node_access_records().
   node_access_rebuild(TRUE);
@@ -17,20 +17,20 @@ function geneshop_cart_enable() {
 /**
  * Implements hook_install().
  */
-function geneshop_cart_install() {
-  variable_set('node_options_' . geneshop_cart_ORDER_NODETYPE, array('status'));
-  variable_set('node_preview_' . geneshop_cart_ORDER_NODETYPE, 0);
+function geneshop_install() {
+  variable_set('node_options_' . geneshop_ORDER_NODETYPE, array('status'));
+  variable_set('node_preview_' . geneshop_ORDER_NODETYPE, 0);
   // Disabling comments for order.
   if (defined('COMMENT_NODE_HIDDEN')) {
-    variable_set('comment_' . geneshop_cart_ORDER_NODETYPE, COMMENT_NODE_HIDDEN);
+    variable_set('comment_' . geneshop_ORDER_NODETYPE, COMMENT_NODE_HIDDEN);
   }
 }
 
 /**
  * Implements hook_schema().
  */
-function geneshop_cart_schema() {
-  $schema['geneshop_cart_order'] = array(
+function geneshop_schema() {
+  $schema['geneshop_order'] = array(
     'description' => 'Stores order information for Gene Shop module.',
     'fields' => array(
       'oid' => array(
@@ -85,10 +85,10 @@ function geneshop_cart_schema() {
 /**
  * Implements hook_uninstall().
  */
-function geneshop_cart_uninstall() {
-  db_delete('variable')->condition('name', '%geneshop_cart%', 'LIKE')->execute();
+function geneshop_uninstall() {
+  db_delete('variable')->condition('name', '%geneshop%', 'LIKE')->execute();
 
-  $q = db_select('geneshop_cart_order', 'o')->fields('o', array('nid'))->execute();
+  $q = db_select('geneshop_order', 'o')->fields('o', array('nid'))->execute();
   $nids = array();
   foreach ($q as $node) {
     $nids[] = $node->nid;
@@ -99,8 +99,8 @@ function geneshop_cart_uninstall() {
 /**
  * Modify the length in the order_code field.
  */
-function geneshop_cart_update_7100() {
-  db_change_field('geneshop_cart_order', 'code', 'code', array(
+function geneshop_update_7100() {
+  db_change_field('geneshop_order', 'code', 'code', array(
       'type' => 'varchar',
       'length' => 64,
       'not null' => TRUE,
@@ -111,10 +111,10 @@ function geneshop_cart_update_7100() {
 }
 
 /**
- * Drops the {uid} field from {geneshop_cart_order} table.
+ * Drops the {uid} field from {geneshop_order} table.
  */
-function geneshop_cart_update_7101() {
-  db_drop_index('geneshop_cart_order', 'order_uid');
-  db_drop_index('geneshop_cart_order', 'order_code');
-  db_drop_field('geneshop_cart_order', 'uid');
+function geneshop_update_7101() {
+  db_drop_index('geneshop_order', 'order_uid');
+  db_drop_index('geneshop_order', 'order_code');
+  db_drop_field('geneshop_order', 'uid');
 }

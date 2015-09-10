@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * Definition of geneshop_cart_handler_field_geneshop_cart_order_items.
+ * Definition of geneshop_handler_field_geneshop_order_items.
  */
 /**
  * Field handler to show items for the order.
  *
  * @ingroup views_field_handlers
  */
-class geneshop_cart_handler_field_geneshop_cart_order_items extends views_handler_field {
+class geneshop_handler_field_geneshop_order_items extends views_handler_field {
   function option_definition() {
     $options = parent::option_definition();
     $options['format'] = array('default' => 'default');
@@ -47,9 +47,9 @@ class geneshop_cart_handler_field_geneshop_cart_order_items extends views_handle
     $value = (array) unserialize($values->{$this->field_alias});
     switch ($this->options['format']) {
       case 'default':
-        return theme('geneshop_cart_items_table', array('basket' => $value));
+        return theme('geneshop_items_table', array('basket' => $value));
       case 'table':
-        return theme('table', array('rows' => $value['items'], 'header' => _geneshop_cart_basket_items_header()));
+        return theme('table', array('rows' => $value['items'], 'header' => _geneshop_basket_items_header()));
       case 'list':
         $delimiter = !empty($this->options['delimiter']) ? $this->options['delimiter'] : ' | ';
         $item_list = array();
@@ -62,7 +62,7 @@ class geneshop_cart_handler_field_geneshop_cart_order_items extends views_handle
             }
             else {
               if ($key == 'price') {
-                $val = _geneshop_cart_get_price_numberformat($val);
+                $val = _geneshop_get_price_numberformat($val);
               }
               $item[$key] = $key . ': ' . $val;
             }
@@ -71,7 +71,7 @@ class geneshop_cart_handler_field_geneshop_cart_order_items extends views_handle
         }
         return theme('item_list', array('items' => $item_list));
       case 'only_total_sum':
-        return isset($value['total_sum']) ? _geneshop_cart_get_price_numberformat($value['total_sum']) : '';
+        return isset($value['total_sum']) ? _geneshop_get_price_numberformat($value['total_sum']) : '';
     } 
   } 
 }
