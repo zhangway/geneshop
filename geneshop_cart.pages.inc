@@ -88,44 +88,8 @@ function generate_fasta($sql, $regex) {
     //data needs to be print as a plain text:
     drupal_add_http_header('Content-Type: text/plain');
     print $data;
-   // $test = 'Hello !!!';
-    //print $test;
-   // error_log($data);
-    // drupal_exit prompts a save dialog:
     drupal_exit();
 }
-
-/**
- * Performs a reverse compliment of a nucleotide sequence
- *
- * @param $sequence
- *   The nucelotide sequence
- *
- * @return
- *   an upper-case reverse complemented sequence
- *
- * @ingroup tripal_feature_api
- */
-/*function tripal_reverse_compliment_sequence($sequence) {
-
-  $seq = strtoupper($sequence);
-  $seq = strrev($seq);
-  $seq = str_replace("A", "t", $seq);
-  $seq = str_replace("T", "a", $seq);
-  $seq = str_replace("G", "c", $seq);
-  $seq = str_replace("C", "g", $seq);
-  $seq = str_replace("Y", "r", $seq);
-  $seq = str_replace("R", "y", $seq);
-  $seq = str_replace("W", "w", $seq);
-  $seq = str_replace("S", "s", $seq);
-  $seq = str_replace("K", "m", $seq);
-  $seq = str_replace("M", "k", $seq);
-  $seq = str_replace("D", "h", $seq);
-  $seq = str_replace("V", "b", $seq);
-  $seq = str_replace("H", "d", $seq);
-  $seq = str_replace("B", "v", $seq);
-  return strtoupper($seq);
-}*/
 
 /**
  * Shared Ajax callback for basket page actions.
@@ -458,56 +422,27 @@ function geneshop_cart_mrna($ajax = FALSE) {
                   and cvt.name = 'mRNA'
             and chf.nid = :nid
 SQL;
-    $regex = "/([acgtACGT])/";
+    $regex = "/([acgtACGT]{80})/";
     generate_fasta($sql, $regex);
 }
 
 function geneshop_cart_gene() {
-  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
-  $feature = $variables['node']->feature;
-  $residues = '';
-  if(strcmp($feature->type_id->name, 'scaffold') != 0 and
-     strcmp($feature->type_id->name, 'chromosome') != 0 and
-     strcmp($feature->type_id->name, 'supercontig') != 0 and
-     strcmp($feature->type_id->name, 'pseudomolecule') != 0) {
-    $feature = chado_expand_var($feature, 'field', 'feature.residues');
-    $residues = $feature->residues;
-  }
-  
-  $feature = $variables['node']->feature;
-  $featureloc_sequences = $feature->featureloc_sequences;
-
-  if ($residues> 0) {
-    $regex = "/([acgtACGT])/";
-    generate_fasta($residues, $regex);
-/*
-  $all_relationships = $feature->all_relationships;
-  $object_rels = $all_relationships['object'];
-  $has_coding_seq = 0;
-  $coding_seq = '';
-  foreach ($object_rels as $rel_type => $rels) {
-    foreach ($rels as $subject_type => $subjects) {
-      foreach ($subjects as subject) {
-
-      // add in protein sequence if it has residues
-      if ($rel_type == 'derives from' and $subject_type == 'polypeptide') {
-        $protein = $subtype->record->subject_id;
-        $protein = chado_expand_var($protein, 'field', 'feature.residues');*/
-
-/*  $sql =<<<SQL
+  $sql =<<<SQL
            select f.name, f.residues
            from chado.gene g,
-           chado.feature f,
-           chado.cvterm cvt,
+                chado.feature f,
+                chado.featureloc floc,
+                chado.cvterm cvt,
                 public.chado_feature chf
-           where g.gene_id = f.feature_id
+           where g.gene_id = floc.feature_id
                  and g.gene_id = chf.feature_id
+                 and floc.scrfeature_id = f.feature_id
                  and f.type_id = cvt.cvterm_id
-                 and cvt.name = 'gene'
+                 and cvt.name = 'mRNA'
                  and chf.nid = :nid
 SQL;
-    $regex = "/([acgtACGT])/";
-    generate_fasta($sql, $regex); */
+  $regex = "/([acgtACGT]{80})/";
+  generate_fasta($sql, $regex);
 }
 
 /**
