@@ -1,15 +1,17 @@
 <?php
+
 /**
  * Menu callbacks.
  */
+
 /**
  * Submit actions for add2basket link.
  */
 function geneshop_add2basket($node, $type) {
   // Verification of the absence of this node in basket.
   if (_geneshop_in_basket($node->nid)) {
-    drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title)
-      ), 'warning');
+    /*drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title)
+      ), 'warning');*/
   }
   else {
     global $user;
@@ -18,25 +20,16 @@ function geneshop_add2basket($node, $type) {
       drupal_session_start();
     }
     $item = array();
-    if ($node->type == 'chado_feature' && $node->feature->type_id->name == 'gene') {
-      $sql =<<<SQL
-            SELECT *
-            FROM  chado.gene
-            WHERE nid = :nid
+    $sql =<<<SQL
+          SELECT g.neme
+          FROM  chado.gene g
+          WHERE nid = :nid
 SQL;
-      $args = array(':nid' => $node->nid);
-      $result = db_query($sql, $args)->fetchObject();
-      $vars = get_object_vars ( $result );
-      $item['type']  = "gene";
-      $item['title'] = $result->name;
-      $item['content'] = $result->name. "~" . $result->coordinate . "~" . $result->start . "~" . $result->stop . "~" . $result->gene_family ."~" . $result->description;
-      $item['header'] = "Name~Chromosome~Start~End~Gene family~Description" ;    
-    } else {
-        $item['type']  = "item";
-        $item['title'] = $node->title;
-        $item['content'] = $node->title;
-        $item['header'] = "Title";
-    }
+    $args = array(':nid' => $node->nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $vars = get_object_vars ( $result );
+    $item['title'] = $result->name;
+    $item['content'] = $result->name;
     if (variable_get('geneshop_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
@@ -109,13 +102,13 @@ function geneshop_ajaxform_process() {
       $form['#action'] = 'basket/clear';
       $title = t('Do you really want to delete all items from the basket?');
       break;
-      /*
+      
     case 'checkout':
       $form = geneshop_checkout(TRUE);
       $form['#action'] = 'basket/checkout';
-      $title = t('Checkout');
+      $title = t('Download');
       break;
-      */
+      /*
     case 'polypeptides':
       $form = geneshop_polypeptides();
       $form['#action'] = 'basket/polypeptides';
@@ -130,7 +123,7 @@ function geneshop_ajaxform_process() {
       $form = geneshop_gene();
       $form['#action'] = 'basket/gene';
       $title = t('Gene');
-      break;
+      break;*/
     default:
       drupal_process_form($form['#form_id'], $form, $form_state);
   }
@@ -180,7 +173,7 @@ function geneshop_basket_form($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Clear the basket'),
       '#name' => 'clear',
-      //'#ajax' => $ajax_settings,
+      '#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('clear-button'),
       ),
@@ -231,21 +224,21 @@ function geneshop_basket_form($form, &$form_state) {
             'redirect' => ($_SESSION['view_page']), //need to be in ()
         ),
     );
-    /*
+    
     $form['actions']['checkout'] = array(
       '#type' => 'submit',
       '#name' => 'checkout',
-      '#value' => t('Checkout'),
+      '#value' => t('Download'),
       '#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('checkout-button'),
       ),
     );
-    */
+    
     // switch off ajax for :
     $form['actions']['polypeptides'] = array(
-        '#type' => 'submit',
-        '#name' => 'polypeptides',
+        '#type' => 'checkbox',
+        '#submit' => array('geneshop_polypeptides'),
         '#value' => t('Polypeptides'),
         //'#ajax' => $ajax_settings,
         '#attributes' => array(
@@ -253,18 +246,19 @@ function geneshop_basket_form($form, &$form_state) {
         ),
     );
     $form['actions']['mrna'] = array(
-        '#type' => 'submit',
-        '#name' => 'mrna',
+        '#type' => 'checkbox',
+        '#submit' => array('geneshop_mrna'),
         '#value' => t('mRNA'),
-        //'#ajax' => $ajax_settings,
+        '#ajax' => $ajax_settings,
         '#attributes' => array(
             'class' => array('checkout-button'),
         ),
     );
     $form['actions']['gene'] = array(
-      '#type' => 'submit',
-      '#name' => 'gene',
+      '#type' => 'checkbox',
+      '#submit' => array('geneshop_gene'),
       '#value' => t('Gene'),
+      //'#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('checkout-button'),
       ),
@@ -273,7 +267,7 @@ function geneshop_basket_form($form, &$form_state) {
       '#type' => 'submit',
       '#submit' => array('_geneshop_basket_update'),
       '#value' => t('Remove'),
-//      '#ajax' => $ajax_settings,
+      //'#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('update-button'),
       ),
@@ -306,11 +300,10 @@ function geneshop_basket_form_submit($form, &$form_state) {
     case 'clear':
       $form_state['redirect'] = 'basket/clear';
       break;
-      /*
     case 'checkout':
       $form_state['redirect'] = 'basket/checkout';
       break;
-      */
+      /*
     case 'polypeptides':
       $form_state['redirect'] = 'basket/polypeptides';
       break;
@@ -320,6 +313,7 @@ function geneshop_basket_form_submit($form, &$form_state) {
     case 'gene':
       $form_state['redirect'] = 'basket/gene';
      break;
+      */
   }
 }
 /**
@@ -407,7 +401,7 @@ SQL;
     generate_fasta($sql, $regex);
 }
 
-function geneshop_mrna($ajax = FALSE) {
+/*function geneshop_mrna($ajax = FALSE) {
     $sql =<<<SQL
             select f.name, f.residues
             from chado.gene g,
@@ -421,43 +415,45 @@ function geneshop_mrna($ajax = FALSE) {
 SQL;
     $regex = "/([acgtACGT]{80})/";
     generate_fasta($sql, $regex);
-}
+}*/
 
-function geneshop_gene() {
+/*function geneshop_gene() {
   $sql =<<<SQL
-           select f.name, f.residues, floc.fmin, floc.fmax
+           select f.name, f.residues
            from chado.gene g,
-                chado.feature f,
-                chado.featureloc floc,
-                public.chado_feature chf
+           chado.feature f,
+           chado.featureloc floc,
+           public.chado_feature chf
            where g.gene_id = floc.feature_id
-                 and g.gene_id = chf.feature_id
                  and floc.srcfeature_id = f.feature_id
+                 and g.gene_id = chf.feature_id
                  and chf.nid = :nid
 SQL;
-  $regex = "/([acgtACGT]{80})/";
-  generate_fasta_floc($sql, $regex);
-}
+  $regex = "/([acgtACGT]{50})/";
+  generate_fasta($sql, $regex);
+}*/
 
-function generate_fasta_floc($sql, $regex) {
+/*function generate_fasta_floc($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
       $args = array(':nid' => $nid);
-      $result = db_query($sql, $args)->fetchObject();
+      $result = db_query($sql, $args)->fetchobject();
       $start = $result->fmin;
       $stop = $result->fmax;
-      if(strlen($result->name)>0) {
-        for ($i = $start; $i < $stop; $i++) {
-          $residues .= preg_replace($regex, "$1\n", $result->residues[$i]);
-        }
-        $data .= ">".$result->name."\n".$residues."\n";
+      $residues = array();
+      for ($i = 0; $i < ($stop-$start); $i++) {
+        $j = $start;
+        $residues[$i] = $results->residues[$j];
+        $j++;
       }
+     // $residue = preg_replace($regex, "$1\n", $residues);
+      $data .= ">".$result->name;
     }
     //data needs to be print as a plain text:
     drupal_add_http_header('Content-Type: text/plain');
     print $data;
     drupal_exit();
-}
+}*/
 
 /**
  * Confirmation form when cleaning basket.
@@ -513,4 +509,107 @@ function geneshop_my_orders_page($account) {
     drupal_set_message(t('You have no orders for this account.'));
   }
   return $build;
+}
+
+/**
+ * Use function tripal_get_feature_sequences() from tripal_feature
+ * for getting the sequences of genes.
+ */
+function geneshop_gene() {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  $sql =<<<SQL
+    select g.gene_id, f.feature_id, floc.featureloc_id, g.name, cvt.name as type_name
+    from chado.gene g,
+         chado.feature f,
+         chado.featureloc floc,
+         chado.cvterm cvt,
+         public.chado_feature chf
+    where g.gene_id = floc.feature_id
+      and floc.srcfeature_id = f.feature_id
+      and f.type_id = cvt.cvterm_id
+      and g.gene_id = chf.feature_id
+      and chf.nid = :nid
+SQL;
+  foreach ($_SESSION['basket']['items'] as $nid => $value) {
+    $args = array(':nid' => $nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $num_bases = 50;
+    $sequence = array();
+    $sequence = tripal_get_feature_sequences(
+      array(
+        'feature_id' => $result->gene_id,
+        'parent_id' => $result->feature_id,
+        'featureloc_id'=> $result->featureloc_id,
+      ),
+      array(
+        'width' => $num_bases, // FASTA sequence should have $num_bases chars per line
+        'derive_from_parent' => 1,
+        'aggregate' => 1,
+        'is_html' => 0
+      )
+    );
+    $data = '';
+    if (count($sequence)>0) {
+      $data .= ">".$result->name."\n";
+      if ($sequence[0]['residues']) {
+        $data .= $sequence[0][residues]."\n";
+      }
+    }
+    drupal_add_http_header('Content-Type: text/plain');
+    print $data;
+    drupal_exit();
+  }
+}
+
+function geneshop_mrna() {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  $sql =<<<SQL
+    select fs.feature_id, fo.feature_id as parent_id, floc.feature_id as featureloc_id,
+           fs.name, cvt.name as relationship_type
+    from chado.gene g,
+         chado.feature fo,
+         chado.feature_relationship fr,
+         chado.feature fs,
+         chado.featureloc floc,
+         chado.cvterm cvt,
+         public.chado_feature chf
+    where g.gene_id = fo.feature_id
+      and fo.feature_id = fr.object_id
+      and fr.subject_id = fs.feature_id
+      and fs.feature_id = floc.feature_id
+      and fr.type_id = cvt.cvterm_id
+      and g.gene_id = chf.feature_id
+      and chf.nid = :nid
+SQL;
+  foreach ($_SESSION['basket']['items'] as $nid => $value) {
+    $args = array(':nid' => $nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $num_bases = 50;
+    $sequence = array();
+    $sequence = tripal_get_feature_sequences(
+      array(
+        'feature_id' => $result->feature_id,
+        'parent_id' => $result->feature_id,
+        'featureloc_id'=> $result->featureloc_id,
+        'name' => $result->name,
+      ),
+      array(
+        'width' => $num_bases, // FASTA sequence should have $num_bases chars per line
+        'derive_from_parent' => 1,
+        'aggregate' => 1,
+        'relationship_type' => $result->relationship_type,
+        'is_html' => 0
+      )
+    );
+    $data = '';
+    if (count($sequence)>0) {
+      $data .= ">".$result->name."\n";
+      if ($sequence[0]['residues']) {
+        $data .= $sequence[0][residues]."\n";
+      }
+    }
+    drupal_add_http_header('Content-Type: text/plain');
+    print $data;
+    drupal_exit();
+  }
 }
