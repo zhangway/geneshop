@@ -21,7 +21,7 @@ function geneshop_add2basket($node, $type) {
     }
     $item = array();
     $sql =<<<SQL
-          SELECT g.neme
+          SELECT g.name
           FROM  chado.gene g
           WHERE nid = :nid
 SQL;
@@ -65,7 +65,7 @@ SQL;
     ajax_deliver($output);
   }
   else {
-      //drupal_goto();
+     // drupal_goto();
   }
 }
 function generate_fasta($sql, $regex) {
@@ -96,6 +96,27 @@ function geneshop_ajaxform_process() {
   $title = '';
   list($form, $form_state) = ajax_get_form();
   $element_name = $form_state['input']['_triggering_element_name'];
+  foreach ($_SESSION['basket']['items'] as $nid => $data) {
+    switch ($element_name) {
+      case 'gene':
+        $form = geneshop_gene();
+        $form['#action'] = 'basket/gene';
+        $title = t('Gene');
+        break;
+      case 'mrna':
+        $form = geneshop_mrna();
+        $form['#action'] = 'basket/mrna';
+        $title = t('mRNA');
+        break;
+      case 'polypeptides':
+        $form = geneshop_polypeptides();
+        $form['#action'] = 'basket/polypeptides';
+        $title = t('Polypeptides');
+        break;
+      default:
+        drupal_process_form($form['#form_id'], $form, $form_state);
+    }
+  }
   switch ($element_name) {
     case 'clear':
       $form = drupal_get_form('_geneshop_clear_confirm');
@@ -182,11 +203,47 @@ function geneshop_basket_form($form, &$form_state) {
       '#tree' => TRUE,
       '#theme' => 'geneshop_items_form',
     );
+    $form['actions'] = array(
+      '#type' => 'actions',
+      '#attributes' => array(
+        'class' => array('geneshop-form-actions'),
+      ),
+    );
     foreach ($_SESSION['basket']['items'] as $nid => $data) {
       $form['items'][$nid]['title'] = array(
         '#type' => 'link',
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
+      );
+      $form['items'][$nid]['actions'] = array(
+        '#type' => 'actions',
+        '#attributes' => array(
+          'class' => array('geneshop-form-actions'),
+        ),
+      );
+      $form['items'][$nid]['actions']['gene'] = array(
+        '#type' => 'submit',
+        '#name' => 'gene',
+        '#value' => t('Download'),
+        '#attributes' => array(
+          'class' => array('checkout-button'),
+        ),
+      );
+      $form['actions'][$nid]['actions']['mrna'] = array(
+        '#type' => 'submit',
+        '#name' => 'mrna',
+        '#value' => t('Download'),
+        '#attributes' => array(
+          'class' => array('checkout-button'),
+        ),
+      );
+      $form['actions'][$nid]['actions']['polypeptide'] = array(
+        '#type' => 'submit',
+        '#name' => 'polypeptides',
+        '#value' => t('Download'),
+        '#attributes' => array(
+          'class' => array('checkout-button'),
+        ),
       );
       if (isset($data['qty'])) {
         $form['items'][$nid]['qty'] = array(
@@ -209,12 +266,6 @@ function geneshop_basket_form($form, &$form_state) {
         '#type' => 'checkbox',
       );
     }
-    $form['actions'] = array(
-      '#type' => 'actions',
-      '#attributes' => array(
-        'class' => array('geneshop-form-actions'),
-      ),
-    );
     $form['actions']['back'] = array (
         '#type' => 'submit',
         '#value' => t('Go Back'),
@@ -225,7 +276,7 @@ function geneshop_basket_form($form, &$form_state) {
         ),
     );
     
-    $form['actions']['checkout'] = array(
+/*    $form['actions']['checkout'] = array(
       '#type' => 'submit',
       '#name' => 'checkout',
       '#value' => t('Download'),
@@ -262,7 +313,7 @@ function geneshop_basket_form($form, &$form_state) {
       '#attributes' => array(
         'class' => array('checkout-button'),
       ),
-    );
+    );  */
     $form['actions']['update'] = array(
       '#type' => 'submit',
       '#submit' => array('_geneshop_basket_update'),
@@ -303,6 +354,20 @@ function geneshop_basket_form_submit($form, &$form_state) {
     case 'checkout':
       $form_state['redirect'] = 'basket/checkout';
       break;
+  }
+  foreach ($_SESSION['basket']['items'] as $nid => $data) {
+    switch ($form_state['triggering_element']['#name']) {
+      case 'gene':
+        $form_state['redirect'] = 'basket/gene';
+        break;
+      case 'mrna':
+        $form_state['redirect'] = 'basket/mrna';
+        break;
+      case 'polypeptides':
+        $form_state['redirect'] = 'basket/polypeptides';
+        break;
+    }
+  }
       /*
     case 'polypeptides':
       $form_state['redirect'] = 'basket/polypeptides';
@@ -314,7 +379,6 @@ function geneshop_basket_form_submit($form, &$form_state) {
       $form_state['redirect'] = 'basket/gene';
      break;
       */
-  }
 }
 /**
  * Handling data update form the basket page.

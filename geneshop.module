@@ -86,7 +86,6 @@ function geneshop_menu() {
     'file' => 'geneshop.pages.inc',
   );
   */
-
   $items['basket/polypeptides'] = array(
       'title' => 'Polypeptides',
       'page callback' => 'geneshop_polypeptides',
