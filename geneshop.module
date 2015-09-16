@@ -657,19 +657,13 @@ function geneshop_node_info() {
  * Helper function. Returns header array for basket items in table display.
  */
 function _geneshop_basket_items_header() {
-  $header = array();  
-  $header['title'] = t('Name');
-  $header['gene'] = t('Gene');
-  $header['mrna'] = t('mRNA');
-  $header['polypeptide'] = t('Polypeptides');
-  /*
+  $header = array();
   if (variable_get('geneshop_show_qty', TRUE)) {
     $header['qty'] = t('Qty');
   }
   if (variable_get('geneshop_show_price', FALSE)) {
     $header['price'] = t('Price');
   }
-  */
   return $header;
 }
 

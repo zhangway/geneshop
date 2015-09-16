@@ -5,7 +5,7 @@
 /**
  * Preprocess for view basket in block mode.
  */
-/*function theme_geneshop_generate_table($vars) {
+function theme_geneshop_generate_table($vars) {
     $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
     $items = array();
     $header = array();
@@ -22,15 +22,15 @@
     
     $headers = explode("~",$header[0]);
     return array($basket_items, $cols, $headers);
-}*/
+}
 function template_preprocess_geneshop_block_display(&$vars) {
   drupal_add_css(drupal_get_path('module', 'geneshop') . '/theme/geneshop.css');
   $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
-/*  preg_match('/ajax/', current_path(), $matches);
+  preg_match('/ajax/', current_path(), $matches);
   if(!count($matches)){
     $_SESSION['view_page'] = current_path();
-  }*/
-//  list($basket_items, $cols, $headers) = theme_geneshop_generate_table($vars);
+  }
+  list($basket_items, $cols, $headers) = theme_geneshop_generate_table($vars);
   $vars['not_empty'] = !empty($basket_items);
   $vars['count_items'] = $basket_items ? count($_SESSION['basket']['items']) : 0;
   $items_list = array(
@@ -46,16 +46,16 @@ function template_preprocess_geneshop_block_display(&$vars) {
       'class' => array('collapsible', 'collapsed'),
     ),
     // change the type of display here:
-    '#value' => theme('item_list', array('items' => $items)),
-    //'#value' => theme('table', array('rows' => $cols, 'header' => $headers)),
+    //'#value' => theme('item_list', array('items' => $item)),
+    '#value' => theme('table', array('rows' => $cols, 'header' => $headers)),
   );
   //rendering multiple baskets:
-  $vars['basket_items_list'] = $basket_items ? drupal_render($items_list) . drupal_render($items_list2) : '';
-  //$vars['basket_items_list'] = $basket_items ? drupal_render($items_list) : '';
+  //$vars['basket_items_list'] = $basket_items ? drupal_render($items_list) . drupal_render($items_list2) : '';
+  $vars['basket_items_list'] = $basket_items ? drupal_render($items_list) : '';
   $vars['total_sum'] = isset($_SESSION['basket']['total_sum']) ? _geneshop_get_price_numberformat($_SESSION['basket']['total_sum']) : FALSE;
   $vars['basket_page_link'] = $basket_items ? l(t('Go to basket page'), 'basket') : '';
 }
-/*function theme_geneshop_items_form($vars) {
+function theme_geneshop_items_form($vars) {
   list($basket_items, $cols, $header) = theme_geneshop_generate_table($vars);
   $header['del'] = t('Remove');
   $element = $vars['element'];
@@ -76,8 +76,8 @@ function template_preprocess_geneshop_block_display(&$vars) {
     'header' => $header,
     'rows' => $cols,
   ));
-}*/
-function theme_geneshop_items_form($vars) {
+}
+function theme_geneshop_items_form_o($vars) {
   $header = _geneshop_basket_items_header();
   $header['del'] = t('Remove');
   $element = $vars['element'];
