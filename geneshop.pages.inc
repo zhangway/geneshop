@@ -67,6 +67,7 @@ SQL;
      // drupal_goto();
   }
 }
+
 function generate_fasta($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
@@ -200,12 +201,6 @@ function geneshop_basket_form($form, &$form_state) {
       '#tree' => TRUE,
       '#theme' => 'geneshop_items_form',
     );
-    $form['actions'] = array(
-      '#type' => 'actions',
-      '#attributes' => array(
-        'class' => array('geneshop-form-actions'),
-      ),
-    );
     foreach ($_SESSION['basket']['items'] as $nid => $data) {
       $form['items'][$nid]['title'] = array(
         '#type' => 'link',
@@ -257,6 +252,12 @@ function geneshop_basket_form($form, &$form_state) {
         '#type' => 'checkbox',
       );
     }
+    $form['actions'] = array(
+      '#type' => 'actions',
+      '#attributes' => array(
+        'class' => array('geneshop-form-actions'),
+      ),
+    );
     $form['actions']['back'] = array (
         '#type' => 'submit',
         '#value' => t('Go Back'),
@@ -488,93 +489,102 @@ function geneshop_my_orders_page($account) {
  * Use function tripal_get_feature_sequences() from tripal_feature
  * for getting the sequences of genes.
  */
+function geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id) {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  $alignment = array();
+  $alignment = tripal_get_feature_sequences(
+    array(
+      'feature_id' => $feature_id,
+      'parent_id' => $parent_id,
+      'featureloc_id' => $featureloc_id,
+    ),
+    array(
+      'derive_from_parent' => 1,
+      'aggregate' => 1,
+      'is_html' => 0,
+    )
+  );
+  $alignment[0]['residues'] = strtoupper($alignment[0]['residues']);
+  return $alignment;
+}
+
 function geneshop_gene() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
-  $sql =<<<SQL
-    select g.gene_id, f.feature_id, floc.featureloc_id, g.name, cvt.name as type_name
-    from chado.gene g,
-         chado.feature f,
-         chado.featureloc floc,
-         chado.cvterm cvt,
-         public.chado_feature chf
-    where g.gene_id = floc.feature_id
-      and floc.srcfeature_id = f.feature_id
-      and f.type_id = cvt.cvterm_id
-      and g.gene_id = chf.feature_id
-      and chf.nid = :nid
-SQL;
+  $sql = '
+    SELECT G.gene_id as feature_id, F.feature_id as parent_id, FLOC.featureloc_id 
+    FROM {gene} G
+      INNER JOIN {featureloc} FLOC   ON FLOC.feature_id = G.gene_id
+      INNER JOIN {feature} F         ON F.feature_id = FLOC.srcfeature_id
+      INNER JOIN {chado_feature} CHF ON CHF.feature_id = gene_id
+    WHERE chf.nid = :nid
+  ';
+  $data = '';
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
-    $num_bases = 50;
+    $feature_id = $result->feature_id;
+    $parent_id = $result->parent_id;
+    $featureloc_id = $result->featureloc_id;
     $sequence = array();
     $sequence = tripal_get_feature_sequences(
       array(
-        'feature_id' => $result->gene_id,
-        'parent_id' => $result->feature_id,
-        'featureloc_id'=> $result->featureloc_id,
+        'feature_id' => $feature_id,
       ),
       array(
-        'width' => $num_bases, // FASTA sequence should have $num_bases chars per line
-        'derive_from_parent' => 1,
-        'aggregate' => 1,
         'is_html' => 0
       )
     );
-    $data = '';
     if (count($sequence)>0) {
-      $data .= ">".$result->name."\n";
-      if ($sequence[0]['residues']) {
-        $data .= $sequence[0][residues]."\n";
+      if ($sequence[0]['residues']) {  //if there are sequences in residues
+        $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
+        $data .= ">".$sequence[0]['defline']."\n".$sequence[0]['residues']."\n";
+      }
+      else {
+        $alignment = array();
+        $alignment = geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id);
+        $data .= ">".$alignment[0]['defline']."\n".$alignment[0]['residues']."\n";
       }
     }
-    drupal_add_http_header('Content-Type: text/plain');
-    print $data;
-    drupal_exit();
   }
+  drupal_add_http_header('Content-Type: text/plain');
+  print $data;
+  drupal_exit();
 }
 function geneshop_mrna() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
-  $sql =<<<SQL
-    select f.feature_id, floc.featureloc_id, floc.srcfeature_id as parent_id,
-           f.name, cvt.name as relationship_type
-    from chado.gene g,
-         chado.feature f,
-         chado.feature_relationship fr,
-         chado.featureloc floc,
-         chado.cvterm cvt,
-         public.chado_feature chf
-    where g.gene_id = fr.object_id
-      and fr.subject_id = f.feature_id
-      and f.feature_id = floc.feature_id
-      and fr.subject_id = floc.feature_id
-      and fr.type_id = cvt.cvterm_id
-      and g.gene_id = chf.feature_id
-      and chf.nid = :nid
-SQL;
+  $sql = '
+    SELECT FR.subject_id as feature_id, FLOC.srcfeature_id as parent_id, FLOC.featureloc_id 
+    FROM {gene} G
+      INNER JOIN {feature_relationship} FR  ON FR.object_id = G.gene_id
+      INNER JOIN {featureloc} FLOC          ON FLOC.feature_id = FR.subject_id
+      INNER JOIN {chado_feature} CHF        ON CHF.feature_id = gene_id
+    WHERE chf.nid = :nid
+  ';
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
-    $num_bases = 50;
+    $feature_id = $result->feature_id;
+    $parent_id = $result->parent_id;
+    $featureloc_id = $result->featureloc_id;
     $sequence = array();
     $sequence = tripal_get_feature_sequences(
       array(
-        'feature_id' => $result->feature_id,
-        'parent_id' => $result->parent_id,
-        'featureloc_id' => $result->featureloc_id,
+        'feature_id' => $feature_id,
       ),
       array(
-        'width' => $num_bases, // FASTA sequence should have $num_bases chars per line
-        'derive_from_parent' => 1,
-        'aggregate' => 1,
         'is_html' => 0
       )
     );
     $data = '';
     if (count($sequence)>0) {
-      $data .= ">".$result->name."\n";
-      if ($sequence[0]['residues']) {
-        $data .= $sequence[0][residues]."\n";
+      if ($sequence[0]['residues']) {  //if there are sequences in residues
+        $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
+        $data .= ">".$sequence[0][defline]."\n".$sequence[0][residues]."\n";
+      }
+      else {
+        $alignment = array();
+        $alignment = geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id);
+        $data .= ">".$alignment[0]['defline']."\n".$alignment[0]['residues']."\n";
       }
     }
     drupal_add_http_header('Content-Type: text/plain');
@@ -582,8 +592,49 @@ SQL;
     drupal_exit();
   }
 }
-
 function geneshop_polypeptides() {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  $sql = '
+    SELECT FRP.subject_id as feature_id
+    FROM {gene} G
+      INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
+      INNER JOIN {feature_relationship} FRP  ON FRP.object_id = FRM.subject_id
+      INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
+    WHERE chf.nid = :nid
+  ';
+  foreach ($_SESSION['basket']['items'] as $nid => $value) {
+    $args = array(':nid' => $nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $feature_id = $result->feature_id;
+    $sequence = array();
+    $sequence = tripal_get_feature_sequences(
+      array(
+        'feature_id' => $feature_id,
+      ),
+      array(
+        'relationship_type' => 'derives_from',
+        'relationship_part' => 'object',
+        'is_html' => 0
+      )
+    );
+    $data = '';
+    if (count($sequence)>0) {
+      $data .= ">".$sequence[0][defline]."\n";
+      if ($sequence[0]['residues']) {  //if there are sequences in residues
+        $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
+        $data .= $sequence[0][residues]."\n";
+      }
+      else {
+        $data .= "No sequence in residues";
+      }
+    }
+  }
+  drupal_add_http_header('Content-Type: text/plain');
+  print $data;
+  drupal_exit();
+}
+
+/*function geneshop_polypeptides() {
         $sql =<<<SQL
             select f2.name, f2.residues
             from chado.gene g,
@@ -602,14 +653,14 @@ function geneshop_polypeptides() {
                     and f.feature_id = fr2.object_id
                     and fr2.subject_id = f2.feature_id
                     and f2.type_id = cvt2.cvterm_id
-                    and cvt2.name ='polypeptide'
+                    and cvt2.name = 'polypeptide'
                     and chf.nid = :nid
 SQL;
     $regex = "/([a-zA-Z]{80})/";
     generate_fasta($sql, $regex);
 }
 
-/*function geneshop_mrna($ajax = FALSE) {
+function geneshop_mrna($ajax = FALSE) {
     $sql =<<<SQL
             select f.name, f.residues
             from chado.gene g,
@@ -623,25 +674,22 @@ SQL;
 SQL;
     $regex = "/([acgtACGT]{80})/";
     generate_fasta($sql, $regex);
-}*/
+}
 
-/*function geneshop_gene() {
-  $sql =<<<SQL
-           select f.name, f.residues
-           from chado.gene g,
-           chado.feature f,
-           chado.featureloc floc,
-           public.chado_feature chf
-           where g.gene_id = floc.feature_id
-                 and floc.srcfeature_id = f.feature_id
-                 and g.gene_id = chf.feature_id
-                 and chf.nid = :nid
-SQL;
+function geneshop_gene() {
+  $sql = '
+    SELECT f.name, f.residues
+    FROM {gene} g
+      INNER JOIN {featureloc} floc    ON floc.feature_id = g.gene_id
+      INNER JOIN {feature} f          ON f.feature_id = floc.srcfeature_id
+      INNER JOIN {chado_feature} chf  ON chf.feature_id = g.gene_id
+    WHERE chf.nid = :nid';
+
   $regex = "/([acgtACGT]{50})/";
   generate_fasta($sql, $regex);
-}*/
+}
 
-/*function generate_fasta_floc($sql, $regex) {
+function generate_fasta_floc($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
       $args = array(':nid' => $nid);
