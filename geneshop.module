@@ -107,6 +107,20 @@ function geneshop_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'geneshop.pages.inc',
   );
+  $items['basket/align'] = array(
+    'title' => 'Alignment',
+    'page callback' => 'geneshop_sequences_alignment',
+    'access callback' => 'geneshop_basket_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'geneshop.pages.inc',
+  );
+  $items['basket/phylo'] = array(
+    'title' => 'Phylogenetic Tree',
+    'page callback' => 'geneshop_phylo',
+    'access callback' => 'geneshop_basket_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'geneshop.pages.inc',
+  );
   $items['order/%node'] = array(
     'title' => 'Order page',
     'page callback' => '_geneshop_get_my_order',

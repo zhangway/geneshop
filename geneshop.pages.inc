@@ -2,6 +2,7 @@
 /**
  * Menu callbacks.
  */
+
 /**
  * Submit actions for add2basket link.
  */
@@ -96,25 +97,6 @@ function geneshop_ajaxform_process() {
   $title = '';
   list($form, $form_state) = ajax_get_form();
   $element_name = $form_state['input']['_triggering_element_name'];
-/*  foreach ($_SESSION['basket']['items'] as $nid => $data) {
-    switch ($element_name) {
-      case 'gene':
-        $form = geneshop_gene();
-        $form['#action'] = 'basket/gene';
-        $title = t('Gene');
-        break;
-      case 'mrna':
-        $form = geneshop_mrna();
-        $form['#action'] = 'basket/mrna';
-        $title = t('mRNA');
-        break;
-      case 'polypeptides':
-        $form = geneshop_polypeptides();
-        $form['#action'] = 'basket/polypeptides';
-        $title = t('Polypeptides');
-        break;
-    }
-  }*/
   switch ($element_name) {
     case 'clear':
       $form = drupal_get_form('_geneshop_clear_confirm');
@@ -128,6 +110,11 @@ function geneshop_ajaxform_process() {
       $title = t('Download');
       break;
     */
+    case 'phylo':
+      $form = 'geneshop_phylo';
+      $form['#action'] = 'basket/phylo';
+      $title = t('Phylogenetic Tree');
+      break;
     case 'polypeptides':
       $form = geneshop_polypeptides();
       $form['#action'] = 'basket/polypeptides';
@@ -142,6 +129,11 @@ function geneshop_ajaxform_process() {
       $form = geneshop_gene();
       $form['#action'] = 'basket/gene';
       $title = t('Gene');
+      break;
+    case 'align':
+      $form = geneshop_sequences_alignment();
+      $form['#action'] = 'basket/align';
+      $title = t('Align');
       break;
     default:
       drupal_process_form($form['#form_id'], $form, $form_state);
@@ -192,9 +184,25 @@ function geneshop_basket_form($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Clear the basket'),
       '#name' => 'clear',
-      '#ajax' => $ajax_settings,
+      //'#ajax' => $ajax_settings,
       '#attributes' => array(
         'class' => array('clear-button'),
+      ),
+    );
+    $form['align'] = array(
+      '#type' => 'submit',
+      '#value' => t('Align'),
+      '#name' => 'align',
+      '#attributes' => array(
+        'class' => array('checkout-button'),
+      ),
+    );
+    $form['phylo'] = array(
+      '#type' => 'submit',
+      '#name' => 'phylo',
+      '#value' => t('Phylogenetic Tree'),
+      '#attributes' => array(
+        'class' => array('checkout-button'),
       ),
     );
     $form['items'] = array(
@@ -207,30 +215,6 @@ function geneshop_basket_form($form, &$form_state) {
         '#title' => $data['title'],
         '#href' => 'node/' . $nid,
       );
-/*      $form['items'][$nid]['gene'] = array(
-        '#type' => 'checkbox',
-        //'#name' => 'gene',
-        '#value' => t('Download'),
-        '#attributes' => array(
-          'class' => array('checkout-button'),
-        ),
-      );
-      $form['items'][$nid]['mrna'] = array(
-        '#type' => 'checkbox',
-        //'#name' => 'mrna',
-        '#value' => t('Download'),
-        '#attributes' => array(
-          'class' => array('checkout-button'),
-        ),
-      );
-      $form['items'][$nid]['polypeptides'] = array(
-        '#type' => 'checkbox',
-        //'#name' => 'polypeptides',
-        '#value' => t('Download'),
-        '#attributes' => array(
-          'class' => array('checkout-button'),
-        ),
-      );*/
       if (isset($data['qty'])) {
         $form['items'][$nid]['qty'] = array(
           '#type' => 'textfield',
@@ -279,24 +263,6 @@ function geneshop_basket_form($form, &$form_state) {
     );
     */
 //    switch off ajax for :
-    $form['actions']['polypeptides'] = array(
-        '#type' => 'submit',
-        '#name' => 'polypeptides',
-        '#value' => t('Polypeptides'),
-        //'#ajax' => $ajax_settings,
-        '#attributes' => array(
-            'class' => array('checkout-button'),
-        ),
-    );
-    $form['actions']['mrna'] = array(
-        '#type' => 'submit',
-        '#name' => 'mrna',
-        '#value' => t('mRNA'),
-        //'#ajax' => $ajax_settings,
-        '#attributes' => array(
-            'class' => array('checkout-button'),
-        ),
-    );
     $form['actions']['gene'] = array(
       '#type' => 'submit',
       '#name' => 'gene',
@@ -305,7 +271,25 @@ function geneshop_basket_form($form, &$form_state) {
       '#attributes' => array(
         'class' => array('checkout-button'),
       ),
-    ); 
+    );
+    $form['actions']['mrna'] = array(
+      '#type' => 'submit',
+      '#name' => 'mrna',
+      '#value' => t('mRNA'),
+      //'#ajax' => $ajax_settings,
+      '#attributes' => array(
+        'class' => array('checkout-button'),
+        ),
+    );
+    $form['actions']['polypeptides'] = array(
+      '#type' => 'submit',
+      '#name' => 'polypeptides',
+      '#value' => t('Polypeptides'),
+      //'#ajax' => $ajax_settings,
+      '#attributes' => array(
+        'class' => array('checkout-button'),
+        ),
+    );
     $form['actions']['update'] = array(
       '#type' => 'submit',
       '#submit' => array('_geneshop_basket_update'),
@@ -343,8 +327,11 @@ function geneshop_basket_form_submit($form, &$form_state) {
     case 'clear':
       $form_state['redirect'] = 'basket/clear';
       break;
-    case 'checkout':
+/*    case 'checkout':
       $form_state['redirect'] = 'basket/checkout';
+      break;*/
+    case 'phylo':
+      $form_state['redirect'] = 'basket/phylo';
       break;
     case 'polypeptides':
       $form_state['redirect'] = 'basket/polypeptides';
@@ -354,21 +341,11 @@ function geneshop_basket_form_submit($form, &$form_state) {
       break;
     case 'gene':
       $form_state['redirect'] = 'basket/gene';
-     break;
+      break;
+    case 'align':
+      $form_state['redirect'] = 'basket/align';
+      break;
   }
-/*  foreach ($_SESSION['basket']['items'] as $nid => $data) {
-    switch ($form_state['triggering_element']['#name']) {
-      case 'gene':
-        $form_state['redirect'] = 'basket/gene';
-        break;
-      case 'mrna':
-        $form_state['redirect'] = 'basket/mrna';
-        break;
-      case 'polypeptides':
-        $form_state['redirect'] = 'basket/polypeptides';
-        break;
-    }
-  }*/
 }
 /**
  * Handling data update form the basket page.
@@ -489,7 +466,12 @@ function geneshop_my_orders_page($account) {
  * Use function tripal_get_feature_sequences() from tripal_feature
  * for getting the sequences of genes.
  */
-function geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id) {
+/*
+ * If the sequences come from alignment on scaffold
+ * the location of genes are in featureloc table.
+ * This function supports the multi-exon/ splice juction.
+ */
+function geneshop_sequences_from_parent($feature_id, $parent_id, $featureloc_id) {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $alignment = array();
   $alignment = tripal_get_feature_sequences(
@@ -507,7 +489,10 @@ function geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id) {
   $alignment[0]['residues'] = strtoupper($alignment[0]['residues']);
   return $alignment;
 }
-
+/*
+ * Function for retrieving mRNA sequences from Chado
+ * and print it into text file fasta format.
+ */
 function geneshop_gene() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
@@ -541,7 +526,7 @@ function geneshop_gene() {
       }
       else {
         $alignment = array();
-        $alignment = geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id);
+        $alignment = geneshop_sequences_from_parent($feature_id, $parent_id, $featureloc_id);
         $data .= ">".$alignment[0]['defline']."\n".$alignment[0]['residues']."\n";
       }
     }
@@ -550,6 +535,10 @@ function geneshop_gene() {
   print $data;
   drupal_exit();
 }
+/*
+ * Function for retrieving mRNA sequences from Chado
+ * and print it into text file fasta format.
+ */
 function geneshop_mrna() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
@@ -560,6 +549,7 @@ function geneshop_mrna() {
       INNER JOIN {chado_feature} CHF        ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
+  $data = '';
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
@@ -575,15 +565,14 @@ function geneshop_mrna() {
         'is_html' => 0
       )
     );
-    $data = '';
     if (count($sequence)>0) {
       if ($sequence[0]['residues']) {  //if there are sequences in residues
         $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
-        $data .= ">".$sequence[0][defline]."\n".$sequence[0][residues]."\n";
+        $data .= ">".$sequence[0][defline]."\n".$sequence[0]['residues']."\n";
       }
       else {
         $alignment = array();
-        $alignment = geneshop_sequences_alignment($feature_id, $parent_id, $featureloc_id);
+        $alignment = geneshop_sequences_from_parent($feature_id, $parent_id, $featureloc_id);
         $data .= ">".$alignment[0]['defline']."\n".$alignment[0]['residues']."\n";
       }
     }
@@ -592,20 +581,73 @@ function geneshop_mrna() {
     drupal_exit();
   }
 }
+/*
+ * Function for retrieving polypeptide sequences from Chado
+ * and print it into text file fasta format.
+ */
 function geneshop_polypeptides() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
-    SELECT FRP.subject_id as feature_id
+    SELECT FRM.subject_id as feature_id
     FROM {gene} G
       INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
-      INNER JOIN {feature_relationship} FRP  ON FRP.object_id = FRM.subject_id
       INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
+  $data = '';
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
     $feature_id = $result->feature_id;
+    $sequence = array();
+    $sequence = tripal_get_feature_sequences(
+      array(
+        'feature_id' => $feature_id,
+      ),
+      array(
+        'aggregate' => 1,
+        'relationship_type' => 'derives_from',
+        'relationship_part' => 'object',
+        'is_html' => 0
+      )
+    );
+    if (count($sequence)>0) {
+      $data .= ">".$sequence[0][defline]."\n";
+      if ($sequence[0]['residues']) {  //if there are sequences in residues
+        $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
+        $data .= $sequence[0]['residues']."\n";
+      }
+    }
+  }
+  drupal_add_http_header('Content-Type: text/plain');
+  print $data;
+  drupal_exit();
+}
+
+/*
+ * Function for retrieving polypeptide sequences from Chado
+ * and sending to clustal omega (REST) for multiple alignment.
+ */
+function geneshop_sequences_alignment() {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  module_load_include('inc', 'clustalo', 'clustalo.restclient');
+/*  $sql = '
+    SELECT FRM.subject_id as feature_id
+    FROM {gene} G
+      INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
+      INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
+    WHERE chf.nid = :nid
+  ';
+  $data = '';
+  foreach ($_SESSION['basket']['items'] as $nid => $value) {
+    $args = array(':nid' => $nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $feature_id = $result->feature_id;*/
+
+// For testing function, required more than one sequence.
+  $mRNA_id = array(3,20,37,53,68);
+  $data = '';
+  foreach ($mRNA_id as $feature_id) {
     $sequence = array();
     $sequence = tripal_get_feature_sequences(
       array(
@@ -617,21 +659,77 @@ function geneshop_polypeptides() {
         'is_html' => 0
       )
     );
-    $data = '';
     if (count($sequence)>0) {
       $data .= ">".$sequence[0][defline]."\n";
       if ($sequence[0]['residues']) {  //if there are sequences in residues
         $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
-        $data .= $sequence[0][residues]."\n";
-      }
-      else {
-        $data .= "No sequence in residues";
+        $data .= $sequence[0]['residues']."\n";
       }
     }
   }
+
+// set parameter and send to ClustalO service.
+  $parameters = array(
+    'email' => 'tongta.bif11@mail.kmutt.ac.th',
+    'sequence' => $data,
+  );
+  $msa = clustalo_submit_job($parameters, $phylo = false);
   drupal_add_http_header('Content-Type: text/plain');
-  print $data;
+  print $msa;
   drupal_exit();
+}
+
+function geneshop_phylo() {
+  module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
+  module_load_include('inc', 'clustalo', 'clustalo.restclient');
+/*  $sql = '
+    SELECT FRM.subject_id as feature_id
+    FROM {gene} G
+      INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
+      INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
+    WHERE chf.nid = :nid
+  ';
+  $data = '';
+  foreach ($_SESSION['basket']['items'] as $nid => $value) {
+    $args = array(':nid' => $nid);
+    $result = db_query($sql, $args)->fetchObject();
+    $feature_id = $result->feature_id;*/
+
+// For testing function, required more than one sequence.
+  $mRNA_id = array(3,20,37,53,68);
+  $data = '';
+  foreach ($mRNA_id as $feature_id) {
+    $sequence = array();
+    $sequence = tripal_get_feature_sequences(
+      array(
+        'feature_id' => $feature_id,
+      ),
+      array(
+        'relationship_type' => 'derives_from',
+        'relationship_part' => 'object',
+        'is_html' => 0
+      )
+    );
+    if (count($sequence)>0) {
+      $data .= ">".$sequence[0][defline]."\n";
+      if ($sequence[0]['residues']) {  //if there are sequences in residues
+        $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
+        $data .= $sequence[0]['residues']."\n";
+      }
+    }
+  }
+
+// set parameter and send to ClustalO service.
+  $parameters = array(
+    'email' => 'tongta.bif11@mail.kmutt.ac.th',
+    'sequence' => $data,
+  );
+  $phylo = clustalo_submit_job($parameters, true);
+
+// send phylogenetic tree in newick form to draw a tree in python script.
+  $enphy = urlencode($phylo);
+  $command = drupal_get_path("module", "geneshop")."/cgi_ete.py .$enphy";
+  system("python2.6 ".$command);
 }
 
 /*function geneshop_polypeptides() {
