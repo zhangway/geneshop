@@ -721,7 +721,7 @@ function geneshop_phylo() {
 
 // set parameter and send to ClustalO service.
   $parameters = array(
-    'email' => 'tongta.bif11@mail.kmutt.ac.th',
+    'email' => 'admin@licebase.org',
     'sequence' => $data,
   );
   $phylo = clustalo_submit_job($parameters, true);
