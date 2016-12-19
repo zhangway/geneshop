@@ -11,6 +11,112 @@
 
 define('geneshop_ORDER_NODETYPE', 'geneshop_order');
 
+function geneshop_user_login() {
+  global $user;
+  if ($user->uid == 0 && !drupal_session_started()) {
+      // Must initialize sessions for anonymous users.
+    drupal_session_start();
+  } 
+  error_log("LOGIN user:".$user->uid);
+  //get the basket itmes from DB
+  $result = _basket_items_for_user2($user->uid);
+  $items = array();
+  $value = array();
+  foreach ($result as $k => $i) {
+    error_log("nid:".$k);
+    $nid = $k;
+    $value['title'] = $i['name'];
+    $value['content'] = $i['name'] . "~" . $i['coordinate'] . "~" . $i['start'] . "~" . $i['stop'] . "~" . $i['gene_family'] . "~" . $i['description'];
+    $item['header'] = "Name~Chromosome~Start~End~Gene family~Description";
+    $_SESSION['basket']['items'][$nid] = $value;
+    $value = array(); 
+  }
+ 
+  $basket_block = geneshop_block_content();
+  render($basket_block);
+  error_log("sesssion------".var_export($_SESSION['basket'], true));
+  error_log("block----".var_export($basket_block, true));
+}
+
+
+function geneshop_user_logout() {
+  
+  error_log("USER LOGOUT. session variables:".var_export($_SESSION['basket'], true));
+  global $user;
+  error_log("userId:".$user->uid);
+  foreach ($_SESSION['basket']['items'] as $nid => $data) {
+    error_log("key:".$nid);
+	error_log("value:".var_export($data, true));
+  } 
+  $nid = array_keys($_SESSION['basket']['items']);
+  //delete items into geneshop_basket table
+  error_log("INSERT~~~~~");
+  $num_deleted = db_delete('geneshop_basket')
+    ->condition('uid', $user->uid)
+    ->execute();
+  //insert
+  foreach ($nid as $nodeid) {
+    error_log("nodeid:".$nodeid.",uid:".$user->uid);
+    $nid = db_insert('geneshop_basket') // Table name no longer needs {}
+           ->fields(array(
+             'uid' => $user->uid,
+             'nodeid' => $nodeid,
+           ))
+           ->execute();
+  }
+}
+
+
+function _insert_basket_item($uid, $node_id) {
+  
+}
+
+function _basket_items_for_user($uid) {
+  error_log("calling db_query:".$uid);
+  $result= db_query("SELECT nodeid from {geneshop_basket} WHERE uid = :uid", array(":uid" => $uid));
+  foreach ($result as $r) {
+    error_log("node_id:".$r->nodeid);
+  } 
+}
+
+
+function _basket_items_for_user2($uid) {
+  error_log("calling db_select:".$uid);
+  $query = db_select('gene', 'g');
+  error_log('after db_select');
+  $query->join('geneshop_basket', 'basket', 'g.nid = basket.nodeid');
+  $query->condition('basket.uid', $uid, '=');
+  $query->fields('g', array('nid', 'name', 'coordinate', 'start', 'stop', 'gene_family', 'description'));
+  error_log('get result'.get_class($query));
+  $result = $query->execute();
+  error_log("result type:".gettype($result));
+  error_log("result:".print_r($result, true));
+  $ret = array();
+  foreach ($result as $value) {
+    $ret[$value->nid]['name'] = $value->name;
+    $ret[$value->nid]['coordinate'] = $value->coordinate;
+    $ret[$value->nid]['start'] = $value->start;
+    $ret[$value->nid]['stop'] = $value->stop;
+    $ret[$value->nid]['geme_family'] = $value->gene_family;
+    $ret[$value->nid]['description'] = $value->description;
+    error_log("type:".gettype($value)."class:".get_class($value)."name:".$value->name);
+  } 
+  error_log("ret:".var_export($ret, true));
+  /*
+  $values = $result->fetchAllAssoc(); 
+  error_log("value type:".$values);
+  error_log("values:".var_export($values, true));
+  */
+  return $ret;
+}
+function _select3($uid){
+  $result = db_query("SELECT g.name FROM {gene} g INNER JOIN {geneshop_basket} b on b.nodeid= g.nid WHERE b.uid = :uid", array(
+        ':uid' => $uid));
+  foreach ($result as $child) {
+    error_log("name:".$child->name);
+  }
+}
+
 /**
  * Implements hook_permission().
  */
