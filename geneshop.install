@@ -78,7 +78,35 @@ function geneshop_schema() {
     ),
     'primary key' => array('oid'),
   );
-
+  $schema['geneshop_basket'] = array(
+    'description' => 'Stores gennes in the basket.',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default'  => 0,
+        'description' => 'User ID.',
+      ),
+      'nodeid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default'  => 0,
+        'description' => "Node ID.",
+      ),      
+    ),
+    'unique keys' => array(
+      'user_node_id' => array('nid', 'nodeid'),
+    ),
+    'foreign keys' => array(
+      'basket_gene' => array(
+        'table' => 'gene',
+        'columns' => array('nodeid' => 'nid'),
+      ),
+    ),
+    'primary key' => array('uid', 'nodeid'),
+  );
   return $schema;
 }
 
