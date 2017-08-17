@@ -1,3 +1,23 @@
+.basket-icon {
+  box-shadow: inset 1px 1px 1px 0px #ffffff;
+  background-color: #f9f9f9;
+  display: inline-block;
+  width: 50px;
+  height: 25px;
+  padding: 1px 35px;
+ float: right;
+ border-radius: 5px;
+ align-content: right;
+  
+ background-image: linear-gradient(to bottom, #bfdce2 20%,white 100%), url('../images/32px-Shopping_cart_by_mimooh.svg.png');
+ background-blend-mode:multiply;  
+background-repeat: no-repeat;
+ 
+ 
+    background-position: left;  
+}
+
+
 .geneshop-form-actions {
   text-align: right;
 }

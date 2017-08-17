@@ -11,31 +11,39 @@
 
 define('geneshop_ORDER_NODETYPE', 'geneshop_order');
 
+function geneshop_help($path, $arg) {
+  if ($path == 'admin/help#geneshop') {
+    return t('A demonstration text');
+  }
+}
+
+
 function geneshop_user_login() {
   global $user;
   if ($user->uid == 0 && !drupal_session_started()) {
       // Must initialize sessions for anonymous users.
     drupal_session_start();
   } 
-  error_log("LOGIN user:".$user->uid);
+  // error_log("LOGIN user:".$user->uid);
   //get the basket itmes from DB
   $result = _basket_items_for_user2($user->uid);
   $items = array();
   $value = array();
+  $_SESSION['basket']['items'] = array(); // initialize empty basket if there are no items
   foreach ($result as $k => $i) {
+    $value = array();	
     error_log("nid:".$k);
     $nid = $k;
     $value['title'] = $i['name'];
     $value['content'] = $i['name'] . "~" . $i['coordinate'] . "~" . $i['start'] . "~" . $i['stop'] . "~" . $i['gene_family'] . "~" . $i['description'];
     $item['header'] = "Name~Chromosome~Start~End~Gene family~Description";
     $_SESSION['basket']['items'][$nid] = $value;
-    $value = array(); 
   }
  
   $basket_block = geneshop_block_content();
   render($basket_block);
-  error_log("sesssion------".var_export($_SESSION['basket'], true));
-  error_log("block----".var_export($basket_block, true));
+ // error_log("sesssion------".var_export($_SESSION['basket'], true));
+ // error_log("block----".var_export($basket_block, true));
 }
 
 
@@ -44,19 +52,21 @@ function geneshop_user_logout() {
   error_log("USER LOGOUT. session variables:".var_export($_SESSION['basket'], true));
   global $user;
   error_log("userId:".$user->uid);
+  /*
   foreach ($_SESSION['basket']['items'] as $nid => $data) {
     error_log("key:".$nid);
 	error_log("value:".var_export($data, true));
   } 
+  */
   $nid = array_keys($_SESSION['basket']['items']);
   //delete items into geneshop_basket table
-  error_log("INSERT~~~~~");
+  //  error_log("INSERT~~~~~");
   $num_deleted = db_delete('geneshop_basket')
     ->condition('uid', $user->uid)
     ->execute();
-  //insert
+  // insert
   foreach ($nid as $nodeid) {
-    error_log("nodeid:".$nodeid.",uid:".$user->uid);
+   // error_log("nodeid:".$nodeid.",uid:".$user->uid);
     $nid = db_insert('geneshop_basket') // Table name no longer needs {}
            ->fields(array(
              'uid' => $user->uid,
@@ -66,10 +76,11 @@ function geneshop_user_logout() {
   }
 }
 
-
+/* this is not used
 function _insert_basket_item($uid, $node_id) {
   
 }
+*/
 
 function _basket_items_for_user($uid) {
   error_log("calling db_query:".$uid);
@@ -221,7 +232,7 @@ function geneshop_menu() {
     'file' => 'geneshop.pages.inc',
   );
   $items['basket/phylo'] = array(
-    'title' => 'Phylogenetic Tree',
+    'title' => 'Phylmeogenetic Tree',
     'page callback' => 'geneshop_phylo',
     'access callback' => 'geneshop_basket_access',
     'type' => MENU_CALLBACK,
@@ -287,7 +298,7 @@ function geneshop_preprocess_page(&$vars) {
 /**
  * Create a «add to basket» link for display in the node body.
  */
-function geneshop_add2basket_link($nid, $type) {
+function geneshop_add2basket_link($nid) {
   $build = array();
   if (_geneshop_in_basket($nid)) {
     $build['add2basket_link'] = array(
@@ -401,7 +412,7 @@ function geneshop_insert($node) {
   $order->code = $_SESSION['order_codes'][$node->nid] = drupal_get_token($node->nid);
 
   if (drupal_write_record('geneshop_order', $order)) {
-    unset($_SESSION['basket']);
+    // MD unset($_SESSION['basket']);
     $node->order_items = $order->items;
     $node->order_code = $order->code;
     geneshop_mail_send($node, 'site');
@@ -622,9 +633,11 @@ function geneshop_node_access_records($node) {
  * Access callback function for module menu items.
  */
 function geneshop_basket_access() {
-  return (user_access('use basket') && isset($_SESSION['basket']['items'])
-    && !empty($_SESSION['basket']['items'])
-  );
+  
+  return (user_access('use basket'));
+// && isset($_SESSION['basket']['items'])
+//    && !empty($_SESSION['basket']['items']))
+ 
 }
 
 /**

@@ -97,7 +97,7 @@ function geneshop_schema() {
       ),      
     ),
     'unique keys' => array(
-      'user_node_id' => array('nid', 'nodeid'),
+      'user_node_id' => array('uid', 'nodeid'),
     ),
     'foreign keys' => array(
       'basket_gene' => array(

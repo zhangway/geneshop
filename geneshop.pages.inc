@@ -7,25 +7,33 @@
  * Submit actions for add2basket link.
  */
 function geneshop_add2basket($node, $type) {
+  $rqp = request_path();
+  $dest = drupal_get_destination();
+  error_log('geneshop_add2basket '. $node->nid .  ' '. $type . ' request: '. $rqp . ' referrer: '. $dest['destination']  );
   // Verification of the absence of this node in basket.
   if (_geneshop_in_basket($node->nid)) {
     drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title)
       ), 'warning');
   }
-  else {
+ // else {
     global $user;
-    if ($user->uid == 0 && !drupal_session_started()) {
+    if ( $user->uid === 0 && !drupal_session_started()) {
       // Must initialize sessions for anonymous users.
       drupal_session_start();
     }
     $item = array();
     $sql =<<<SQL
-          SELECT *
-          FROM  chado.gene
-          WHERE nid = :nid
+ 	      
+          SELECT name, coordinate, start, stop, gene_family, description
+          FROM  chado.gene WHERE nid = :nid;
+          
 SQL;
     $args = array(':nid' => $node->nid);
     $result = db_query($sql, $args)->fetchObject();
+    if (!isset($result)  || empty($result) ) {
+	   drupal_set_message(t('Empty chado result for '. $node->nid), 'error');	
+    }
+
     $vars = get_object_vars ( $result );
     $item['title'] = $result->name;
     $item['content'] = $result->name . "~" . $result->coordinate . "~" . $result->start . "~" . $result->stop . "~" . $result->gene_family . "~" . $result->description;
@@ -33,40 +41,57 @@ SQL;
     if (variable_get('geneshop_show_qty', TRUE)) {
       $item['qty'] = 1;
     }
-    if (variable_get('geneshop_show_price', FALSE) && ($price = _geneshop_get_price($node))) {
-      if ($price <= 0 || !is_numeric($price)
-      ) {
+    //error_log('price:'._geneshop_get_price($node));
+   /* 
+   if (variable_get('geneshop_show_price', FALSE) && ($price = _geneshop_get_price($node))) {
+      error_log('no price');
+	  if ($price <= 0 || !is_numeric($price)) {
         drupal_set_message(t('Sorry, but this product currently unavailable
         for ordering'), 'warning');
         $item = FALSE;
+      } else {
+          if (!isset($_SESSION['basket']['currency'])) {
+            $_SESSION['basket']['currency'] = variable_get('geneshop_price_suffix', '');
+          }
+          if (!isset($_SESSION['basket']['total_sum'])) {
+            $_SESSION['basket']['total_sum'] = 0;
+          }  
+          $_SESSION['basket']['total_sum'] += $price;
+          $item['price'] = $_SESSION['basket']['store'][$node->nid]['unit_price'] = $price;
       }
-      else {
-        if (!isset($_SESSION['basket']['currency'])) {
-          $_SESSION['basket']['currency'] = variable_get('geneshop_price_suffix', '');
-        }
-        if (!isset($_SESSION['basket']['total_sum'])) {
-          $_SESSION['basket']['total_sum'] = 0;
-        }
-        $_SESSION['basket']['total_sum'] += $price;
-        $item['price'] = $_SESSION['basket']['store'][$node->nid]['unit_price'] = $price;
-      }
-    }
+    } 
+    */
     if ($item) {
-      $_SESSION['basket']['items'][$node->nid] = $item;
-      /*drupal_set_message(t("'@title' added in your basket", array('@title' => $node->title)));*/
+      error_log('nid:'.$node->nid.'item size:'.count($_SESSION['basket']['items']));
+      if (!isset($node->nid) || $node->nid < 1) {
+      	drupal_set_message(t("WARNING node id was empty"));
+      }
+      $nid = $node->nid;
+      $_SESSION['basket']['items'][$nid] = $item; 
+	  
+      //sleep (1); // Ajax race condition: remove this and first item clicked will never be saved.
+     // seems to be caused by old race condition in session handling in PHP5.3
+       //error_log('item size:'.count($_SESSION['basket']['items']).',items in basket:'.var_export($_SESSION['basket']['items'], true));
+      drupal_set_message(t("'@title' added to your basket", array('@title' => $node->title)));
     }
-  }
+ 
+ 
+
+ // }
   if ($type == 'ajax') {
     $basket_block = geneshop_block_content();
     $commands = array();
     $commands[] = ajax_command_replace(NULL, geneshop_add2basket_link($node->nid));
     $commands[] = ajax_command_replace('#geneshop-ajax-block-content', render($basket_block));
     $output = array('#type' => 'ajax', '#commands' => $commands);
+    error_log('commands:'.var_export($commands, true));
     ajax_deliver($output);
   }
   else {
-     // drupal_goto();
+    error_log('not ajax call');
+      drupal_goto();
   }
+  
 }
 
 function generate_fasta($sql, $regex) {
@@ -323,7 +348,8 @@ function _geneshop_qty_element_validate($element, &$form_state, $form) {
  * Basket page form submit callback.
  */
 function geneshop_basket_form_submit($form, &$form_state) {
-  switch ($form_state['triggering_element']['#name']) {
+  
+   switch ($form_state['triggering_element']['#name']) {
     case 'clear':
       $form_state['redirect'] = 'basket/clear';
       break;
@@ -379,13 +405,15 @@ function _geneshop_basket_update($form, &$form_state) {
     $form_state['rebuild'] = TRUE;
     _geneshop_update_total();
   }
+session_commit();
 }
 /**
  * Updating total sum of basket items.
  */
 function _geneshop_update_total() {
+  return;
   if (empty($_SESSION['basket']['items'])) {
-    unset($_SESSION['basket']);
+    //unset($_SESSION['basket']);
   }
   elseif (variable_get('geneshop_show_price', FALSE) && variable_get('geneshop_price_field', '')) {
     $sum = 0;
@@ -424,9 +452,13 @@ function _geneshop_clear_confirm($form, &$form_state) {
  * Confirmation form submit callback.
  */
 function _geneshop_clear_confirm_submit($form, &$form_state) {
+  unset($_SESSION['basket']['items']);
   unset($_SESSION['basket']);
+  $_SESSION['basket']['items'] = array();
+
   drupal_set_message(t('Your basket is cleared'));
-  drupal_goto($_SESSION['view_page']);
+  drupal_goto();
+  session_write_close();
 }
 /**
  * Helper function to check the access code when referring to a specific order.
@@ -497,10 +529,10 @@ function geneshop_gene() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
     SELECT G.gene_id as feature_id, F.feature_id as parent_id, FLOC.featureloc_id 
-    FROM {gene} G
-      INNER JOIN {featureloc} FLOC   ON FLOC.feature_id = G.gene_id
-      INNER JOIN {feature} F         ON F.feature_id = FLOC.srcfeature_id
-      INNER JOIN {chado_feature} CHF ON CHF.feature_id = gene_id
+    FROM chado.gene as G
+      INNER JOIN chado.featureloc as FLOC   ON FLOC.feature_id = G.gene_id
+      INNER JOIN chado.feature as F         ON F.feature_id = FLOC.srcfeature_id
+      INNER JOIN chado_feature as CHF ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
   $data = '';
@@ -531,7 +563,7 @@ function geneshop_gene() {
       }
     }
   }
-  drupal_add_http_header('Content-Type: text/plain');
+  drupal_add_http_header('Content-Type', 'text/plain');
   print $data;
   drupal_exit();
 }
@@ -543,10 +575,10 @@ function geneshop_mrna() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
     SELECT FR.subject_id as feature_id, FLOC.srcfeature_id as parent_id, FLOC.featureloc_id 
-    FROM {gene} G
-      INNER JOIN {feature_relationship} FR  ON FR.object_id = G.gene_id
-      INNER JOIN {featureloc} FLOC          ON FLOC.feature_id = FR.subject_id
-      INNER JOIN {chado_feature} CHF        ON CHF.feature_id = gene_id
+    FROM chado.gene as G
+      INNER JOIN chado.feature_relationship as FR  ON FR.object_id = G.gene_id
+      INNER JOIN chado.featureloc as FLOC          ON FLOC.feature_id = FR.subject_id
+      INNER JOIN public.chado_feature as CHF        ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
   $data = '';
@@ -557,6 +589,7 @@ function geneshop_mrna() {
     $parent_id = $result->parent_id;
     $featureloc_id = $result->featureloc_id;
     $sequence = array();
+    error_log('hello1');
     $sequence = tripal_get_feature_sequences(
       array(
         'feature_id' => $feature_id,
@@ -565,6 +598,7 @@ function geneshop_mrna() {
         'is_html' => 0
       )
     );
+    error_log('hello2');
     if (count($sequence)>0) {
       if ($sequence[0]['residues']) {  //if there are sequences in residues
         $sequence[0]['residues'] = strtoupper($sequence[0]['residues']);
@@ -576,7 +610,7 @@ function geneshop_mrna() {
         $data .= ">".$alignment[0]['defline']."\n".$alignment[0]['residues']."\n";
       }
     }
-    drupal_add_http_header('Content-Type: text/plain');
+    drupal_add_http_header('Content-Type', 'text/plain');
     print $data;
     drupal_exit();
   }
@@ -589,9 +623,9 @@ function geneshop_polypeptides() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   $sql = '
     SELECT FRM.subject_id as feature_id
-    FROM {gene} G
-      INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
-      INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
+    FROM chado.gene as G
+      INNER JOIN chado.feature_relationship as FRM  ON FRM.object_id = G.gene_id
+      INNER JOIN public.chado_feature CHF         ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
   $data = '';
@@ -619,7 +653,7 @@ function geneshop_polypeptides() {
       }
     }
   }
-  drupal_add_http_header('Content-Type: text/plain');
+  drupal_add_http_header('Content-Type', 'text/plain');
   print $data;
   drupal_exit();
 }
@@ -721,7 +755,7 @@ function geneshop_phylo() {
 
 // set parameter and send to ClustalO service.
   $parameters = array(
-    'email' => 'admin@licebase.org',
+    'email' => 'tongta.bif11@mail.kmutt.ac.th',
     'sequence' => $data,
   );
   $phylo = clustalo_submit_job($parameters, true);
@@ -778,8 +812,8 @@ function geneshop_gene() {
   $sql = '
     SELECT f.name, f.residues
     FROM {gene} g
-      INNER JOIN {featureloc} floc    ON floc.feature_id = g.gene_id
-      INNER JOIN {feature} f          ON f.feature_id = floc.srcfeature_id
+      INNER JOIN {chado.featureloc} floc    ON floc.feature_id = g.gene_id
+      INNER JOIN {chado.feature} f          ON f.feature_id = floc.srcfeature_id
       INNER JOIN {chado_feature} chf  ON chf.feature_id = g.gene_id
     WHERE chf.nid = :nid';
 

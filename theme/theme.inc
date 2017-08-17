@@ -24,18 +24,36 @@ function theme_geneshop_generate_table($vars) {
     return array($basket_items, $cols, $headers);
 }
 function template_preprocess_geneshop_block_display(&$vars) {
+  //error_log("TEMPLATE_PREPROCESS+++++++from".var_export(drupal_get_destination(), true));
   drupal_add_css(drupal_get_path('module', 'geneshop') . '/theme/geneshop.css');
-  $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
+  $referrer = drupal_get_destination();
+  preg_match('search/gene' , $referrer['destination'], $matches1);
+  if ( count($matches1) ) {	
+    $basket_items = (count($_SESSION['basket']['items']) > 0) ? $_SESSION['basket']['items'] : array();
+  error_log("items:".var_export($basket_items, true));
+  } else {
+    ;
+  }
   preg_match('/ajax/', current_path(), $matches);
   if(!count($matches)){
     $_SESSION['view_page'] = current_path();
   }
+  $variables = array(
+      'path' => 'images/shopping-cart.png', 
+      'alt' => 'Items in cart',
+      'title' => 'Your shopping cart',
+      'width' => '15',
+      'height' => '15',
+      'attributes' => array('class' => 'basket-img', 'id' => 'basketicon'),
+      );
+  $img = theme('image', $variables);
+
   list($basket_items, $cols, $headers) = theme_geneshop_generate_table($vars);
   $vars['not_empty'] = !empty($basket_items);
   $vars['count_items'] = $basket_items ? count($_SESSION['basket']['items']) : 0;
   $items_list = array(
     '#theme' => 'fieldset',
-    '#title' => t('Items in basket: ') . $vars['count_items'],
+    '#title' => '<div class="basket-icon">'. $vars['count_items'].' items </div>' ,
     '#attached' => array(
       'js' => array(
         'misc/form.js',
@@ -57,6 +75,7 @@ function template_preprocess_geneshop_block_display(&$vars) {
 }
 function theme_geneshop_items_form($vars) {
   list($basket_items, $cols, $header) = theme_geneshop_generate_table($vars);
+  error_log('header:'.var_export($header, true));
   $header['del'] = t('Remove');
   $element = $vars['element'];
   foreach($cols as $nid => $c) {
