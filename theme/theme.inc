@@ -27,7 +27,7 @@ function template_preprocess_geneshop_block_display(&$vars) {
   //error_log("TEMPLATE_PREPROCESS+++++++from".var_export(drupal_get_destination(), true));
   drupal_add_css(drupal_get_path('module', 'geneshop') . '/theme/geneshop.css');
   $referrer = drupal_get_destination();
-  preg_match('search/gene' , $referrer['destination'], $matches1);
+  preg_match('#search/gene#' , $referrer['destination'], $matches1);
   if ( count($matches1) ) {	
     $basket_items = (count($_SESSION['basket']['items']) > 0) ? $_SESSION['basket']['items'] : array();
   error_log("items:".var_export($basket_items, true));

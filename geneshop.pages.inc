@@ -12,10 +12,10 @@ function geneshop_add2basket($node, $type) {
   error_log('geneshop_add2basket '. $node->nid .  ' '. $type . ' request: '. $rqp . ' referrer: '. $dest['destination']  );
   // Verification of the absence of this node in basket.
   if (_geneshop_in_basket($node->nid)) {
-    drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title)
+    drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title + " " + $node->nid)
       ), 'warning');
   }
- // else {
+  else {
     global $user;
     if ( $user->uid === 0 && !drupal_session_started()) {
       // Must initialize sessions for anonymous users.
@@ -77,7 +77,7 @@ SQL;
  
  
 
- // }
+  }
   if ($type == 'ajax') {
     $basket_block = geneshop_block_content();
     $commands = array();
@@ -214,6 +214,7 @@ function geneshop_basket_form($form, &$form_state) {
         'class' => array('clear-button'),
       ),
     );
+    /*
     $form['align'] = array(
       '#type' => 'submit',
       '#value' => t('Align'),
@@ -222,6 +223,7 @@ function geneshop_basket_form($form, &$form_state) {
         'class' => array('checkout-button'),
       ),
     );
+   
     $form['phylo'] = array(
       '#type' => 'submit',
       '#name' => 'phylo',
@@ -230,6 +232,7 @@ function geneshop_basket_form($form, &$form_state) {
         'class' => array('checkout-button'),
       ),
     );
+    */
     $form['items'] = array(
       '#tree' => TRUE,
       '#theme' => 'geneshop_items_form',
@@ -287,7 +290,8 @@ function geneshop_basket_form($form, &$form_state) {
       ),
     );
     */
-//    switch off ajax for :
+//    switch off ajax for :a
+    
     $form['actions']['gene'] = array(
       '#type' => 'submit',
       '#name' => 'gene',
@@ -297,6 +301,7 @@ function geneshop_basket_form($form, &$form_state) {
         'class' => array('checkout-button'),
       ),
     );
+    /*
     $form['actions']['mrna'] = array(
       '#type' => 'submit',
       '#name' => 'mrna',
@@ -315,6 +320,7 @@ function geneshop_basket_form($form, &$form_state) {
         'class' => array('checkout-button'),
         ),
     );
+    */
     $form['actions']['update'] = array(
       '#type' => 'submit',
       '#submit' => array('_geneshop_basket_update'),
@@ -665,10 +671,10 @@ function geneshop_polypeptides() {
 function geneshop_sequences_alignment() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   module_load_include('inc', 'clustalo', 'clustalo.restclient');
-/*  $sql = '
+  $sql = '
     SELECT FRM.subject_id as feature_id
-    FROM {gene} G
-      INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
+    FROM {chado.gene} G
+      INNER JOIN {chado.feature_relationship} FRM  ON FRM.object_id = G.gene_id
       INNER JOIN {chado_feature} CHF         ON CHF.feature_id = gene_id
     WHERE chf.nid = :nid
   ';
@@ -676,10 +682,10 @@ function geneshop_sequences_alignment() {
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
-    $feature_id = $result->feature_id;*/
+    $feature_id = $result->feature_id;
 
 // For testing function, required more than one sequence.
-  $mRNA_id = array(3,20,37,53,68);
+  //$mRNA_id = array(3,20,37,53,68);
   $data = '';
   foreach ($mRNA_id as $feature_id) {
     $sequence = array();
@@ -701,22 +707,22 @@ function geneshop_sequences_alignment() {
       }
     }
   }
-
+ error_log('data:'.$data);
 // set parameter and send to ClustalO service.
   $parameters = array(
-    'email' => 'tongta.bif11@mail.kmutt.ac.th',
     'sequence' => $data,
   );
   $msa = clustalo_submit_job($parameters, $phylo = false);
-  drupal_add_http_header('Content-Type: text/plain');
-  print $msa;
+  drupal_add_http_header('Content-Type', 'text/plain;utf-8');
+  error_log('msa:'.$msa);
   drupal_exit();
+  }
 }
 
 function geneshop_phylo() {
   module_load_include('inc', 'tripal_feature', 'tripal_feature.api');
   module_load_include('inc', 'clustalo', 'clustalo.restclient');
-/*  $sql = '
+  $sql = '
     SELECT FRM.subject_id as feature_id
     FROM {gene} G
       INNER JOIN {feature_relationship} FRM  ON FRM.object_id = G.gene_id
@@ -727,7 +733,7 @@ function geneshop_phylo() {
   foreach ($_SESSION['basket']['items'] as $nid => $value) {
     $args = array(':nid' => $nid);
     $result = db_query($sql, $args)->fetchObject();
-    $feature_id = $result->feature_id;*/
+    $feature_id = $result->feature_id;
 
 // For testing function, required more than one sequence.
   $mRNA_id = array(3,20,37,53,68);
@@ -764,9 +770,10 @@ function geneshop_phylo() {
   $enphy = urlencode($phylo);
   $command = drupal_get_path("module", "geneshop")."/cgi_ete.py .$enphy";
   system("python2.6 ".$command);
+  }
 }
-
-/*function geneshop_polypeptides() {
+/*
+function geneshop_polypeptides() {
         $sql =<<<SQL
             select f2.name, f2.residues
             from chado.gene g,
@@ -785,7 +792,30 @@ function geneshop_phylo() {
                     and f.feature_id = fr2.object_id
                     and fr2.subject_id = f2.feature_id
                     and f2.type_id = cvt2.cvterm_id
-                    and cvt2.name = 'polypeptide'
+                    and cvt2.name = 'polypeptideql =<<<SQL
+773             select f2.name, f2.residues
+774             from chado.gene g,
+775             chado.feature_relationship fr,
+776             chado.feature f,
+777             public.chado_feature chf,
+778             chado.cvterm cvt,
+779             chado.feature f2,
+780             chado.feature_relationship fr2,
+781                    chado.cvterm cvt2
+782               where g.gene_id = fr.object_id
+783                     and fr.subject_id = f.feature_id
+784                     and g.gene_id = chf.feature_id
+785                     and f.type_id = cvt.cvterm_id
+786                     and cvt.name =  'mRNA'
+787                     and f.feature_id = fr2.object_id
+788                     and fr2.subject_id = f2.feature_id
+789                     and f2.type_id = cvt2.cvterm_id
+790                     and cvt2.name = 'polypeptide'
+791                     and chf.nid = :nid
+792 SQL;
+793     $regex = "/([a-zA-Z]{80})/";
+794     generate_fasta($sql, $regex);
+795 }
                     and chf.nid = :nid
 SQL;
     $regex = "/([a-zA-Z]{80})/";
@@ -820,7 +850,7 @@ function geneshop_gene() {
   $regex = "/([acgtACGT]{50})/";
   generate_fasta($sql, $regex);
 }
-
+*/
 function generate_fasta_floc($sql, $regex) {
     $data = '';
     foreach ($_SESSION['basket']['items'] as $nid => $value) {
@@ -841,4 +871,9 @@ function generate_fasta_floc($sql, $regex) {
     drupal_add_http_header('Content-Type: text/plain');
     print $data;
     drupal_exit();
-}*/
+}
+
+
+
+
+
