@@ -1,5 +1,5 @@
 .basket-icon {
-  display: inline-block;
+  display: ruby-base;
   width: 50px;
   height: 25px;
   padding: 1px 35px;
@@ -7,7 +7,7 @@
  align-content: right;
   
  background-image: url('../images/32px-Shopping_cart_by_mimooh.svg.png');
-background-repeat: no-repeat;
+ background-repeat: no-repeat;
  
  
     background-position: left;  
