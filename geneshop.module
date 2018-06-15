@@ -36,7 +36,7 @@ function geneshop_user_login() {
     $nid = $k;
     $value['title'] = $i['name'];
     $value['content'] = $i['name'] . "~" . $i['coordinate'] . "~" . $i['start'] . "~" . $i['stop'] . "~" . $i['gene_family'] . "~" . $i['description'];
-    $item['header'] = "Name~Chromosome~Start~End~Gene family~Description";
+    $value['header'] = "Name~Chromosome~Start~End~Gene family~Description";
     $_SESSION['basket']['items'][$nid] = $value;
   }
  
