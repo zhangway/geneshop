@@ -9,18 +9,17 @@ function theme_geneshop_generate_table($vars) {
     $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
     $items = array();
     $header = array();
-    if ($basket_items) {
+    if (!empty($basket_items)) {
         foreach ($basket_items as $nid => $item) {
             $items[$nid] = l($item['content'], 'node/' . $nid);
-            $header[]= $item['header'];
+            $header[0] = $item['header'];
         }
     }
     $cols = array();
     foreach($items as $nid => $content) {
         $cols[$nid] = explode("~", $content);
     }
-    
-    $headers = explode("~",$header[0]);
+    $headers = (isset($header[0]))? explode("~",$header[0]) : [];
     return array($basket_items, $cols, $headers);
 }
 function template_preprocess_geneshop_block_display(&$vars) {
@@ -29,8 +28,9 @@ function template_preprocess_geneshop_block_display(&$vars) {
   $referrer = drupal_get_destination();
   preg_match('#search/gene#' , $referrer['destination'], $matches1);
   if ( count($matches1) ) {	
-    $basket_items = (count($_SESSION['basket']['items']) > 0) ? $_SESSION['basket']['items'] : array();
-  error_log("items:".var_export($basket_items, true));
+    $basket_items = (isset($_SESSION['basket']['items']) && count($_SESSION['basket']['items']) > 0) ? 
+                    $_SESSION['basket']['items'] : array();
+  //error_log("items:".var_export($basket_items, true));
   } else {
     ;
   }
@@ -53,7 +53,7 @@ function template_preprocess_geneshop_block_display(&$vars) {
   $vars['count_items'] = $basket_items ? count($_SESSION['basket']['items']) : 0;
   $items_list = array(
     '#theme' => 'fieldset',
-    '#title' => '<div class="basket-icon">'. $vars['count_items'].' items </div>' ,
+    '#title' => '<div class="basket-icon">'.$vars['count_items'].'&nbsp;items&nbsp;</div>' ,
     '#attached' => array(
       'js' => array(
         'misc/form.js',
@@ -75,7 +75,7 @@ function template_preprocess_geneshop_block_display(&$vars) {
 }
 function theme_geneshop_items_form($vars) {
   list($basket_items, $cols, $header) = theme_geneshop_generate_table($vars);
-  error_log('header:'.var_export($header, true));
+  //error_log('header:'.var_export($header, true));
   $header['del'] = t('Remove');
   $element = $vars['element'];
   foreach($cols as $nid => $c) {

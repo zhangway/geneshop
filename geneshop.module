@@ -20,7 +20,8 @@ function geneshop_help($path, $arg) {
 
 function geneshop_user_login() {
   global $user;
-  if ($user->uid == 0 && !drupal_session_started()) {
+  if ($user->uid === 0 && !drupal_session_started()) {
+      error_log("New anonymous geneshop user session started", true);
       // Must initialize sessions for anonymous users.
     drupal_session_start();
   } 
@@ -536,7 +537,7 @@ function geneshop_view($node, $view_mode) {
  * Check to add item to its absence in the basket.
  */
 function _geneshop_in_basket($nid) {
-  return isset($_SESSION['basket']['items']) ? array_key_exists($nid, $_SESSION['basket']['items']) : FALSE;
+  return (isset($_SESSION['basket']['items']) ? array_key_exists($nid, $_SESSION['basket']['items']) : false);
 }
 
 /**

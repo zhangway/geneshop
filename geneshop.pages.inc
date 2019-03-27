@@ -9,7 +9,7 @@
 function geneshop_add2basket($node, $type) {
   $rqp = request_path();
   $dest = drupal_get_destination();
-  error_log('geneshop_add2basket '. $node->nid .  ' '. $type . ' request: '. $rqp . ' referrer: '. $dest['destination']  );
+  //error_log('geneshop_add2basket '. $node->nid .  ' '. $type . ' request: '. $rqp . ' referrer: '. $dest['destination']  );
   // Verification of the absence of this node in basket.
   if (_geneshop_in_basket($node->nid)) {
     drupal_set_message(t('"@title" is already in your basket', array('@title' => $node->title + " " + $node->nid)
@@ -18,6 +18,7 @@ function geneshop_add2basket($node, $type) {
   else {
     global $user;
     if ( $user->uid === 0 && !drupal_session_started()) {
+      drupal_set_message(t('New session initialized for you '. $node->nid), 'error');
       // Must initialize sessions for anonymous users.
       drupal_session_start();
     }
@@ -32,7 +33,7 @@ SQL;
     $result = db_query($sql, $args)->fetchObject();
     if (!isset($result)  || empty($result) ) {
 	   drupal_set_message(t('Empty chado result for '. $node->nid), 'error');	
-    }
+    } else {
 
     $vars = get_object_vars ( $result );
     $item['title'] = $result->name;
@@ -61,34 +62,44 @@ SQL;
       }
     } 
     */
-    if ($item) {
-      error_log('nid:'.$node->nid.'item size:'.count($_SESSION['basket']['items']));
-      if (!isset($node->nid) || $node->nid < 1) {
+    if (isset($item)) {
+      drupal_session_initialize();
+      //error_log('nid:'.$node->nid.'item size:'.count($_SESSION['basket']['items']));
+      if (empty($node->nid) || $node->nid < 1) {
       	drupal_set_message(t("WARNING node id was empty"));
       }
       $nid = $node->nid;
-      $_SESSION['basket']['items'][$nid] = $item; 
-	  
-      //sleep (1); // Ajax race condition: remove this and first item clicked will never be saved.
+
+      $_SESSION['basket']['items'][$nid] = $item;
+      $_SESSION['nbasket']++;
+      $nb = variable_get('basket_counter_'.$user->uid, 0);
+      if ($user->uid > 0) {
+         variable_set('basket_counter_'.$user->uid, ++$nb); 
+      }
+     // Ajax race condition: remove this and first item clicked will never be saved.
      // seems to be caused by old race condition in session handling in PHP5.3
-       //error_log('item size:'.count($_SESSION['basket']['items']).',items in basket:'.var_export($_SESSION['basket']['items'], true));
+     // error_log('item size:'.count($_SESSION['basket']['items']).',items in basket: '. variable_get('basket_counter_'.$user->uid, 'NA') );
+      if ($user->uid > 0 && count($_SESSION['basket']['items']) != variable_get('basket_counter_'.$user->uid, 0)) {
+         drupal_set_message(t('Incosistent number of  basket items!'), 'error');
+      }
       drupal_set_message(t("'@title' added to your basket", array('@title' => $node->title)));
     }
- 
- 
+ }
 
   }
   if ($type == 'ajax') {
+    drupal_session_initialize();
     $basket_block = geneshop_block_content();
     $commands = array();
     $commands[] = ajax_command_replace(NULL, geneshop_add2basket_link($node->nid));
     $commands[] = ajax_command_replace('#geneshop-ajax-block-content', render($basket_block));
     $output = array('#type' => 'ajax', '#commands' => $commands);
-    error_log('commands:'.var_export($commands, true));
+    // error_log('commands:'.var_export($commands, true));
     ajax_deliver($output);
+    drupal_session_commit();
   }
   else {
-    error_log('not ajax call');
+      //error_log('not ajax call');
       drupal_goto();
   }
   
@@ -188,7 +199,7 @@ function geneshop_basket_form($form, &$form_state) {
   // Set Breadcrumbs.
   drupal_set_breadcrumb($breadcrumb);
   // Check for empty session.
-  if (!isset($_SESSION['basket']['items'])) {
+  if (empty($_SESSION['basket']['items'])) {
     drupal_goto($_SESSION['view_page']);
     drupal_set_title(t('Your basket is empty'));
     $form['empty'] = array(
@@ -458,13 +469,21 @@ function _geneshop_clear_confirm($form, &$form_state) {
  * Confirmation form submit callback.
  */
 function _geneshop_clear_confirm_submit($form, &$form_state) {
+  global $user;
+  drupal_session_initialize();
   unset($_SESSION['basket']['items']);
   unset($_SESSION['basket']);
   $_SESSION['basket']['items'] = array();
+  $_SESSION['nbasket'] = 0;
+  if ($user->uid > 0) {
+      variable_set('basket_counter_'.$user->uid, 0);
+  }
 
   drupal_set_message(t('Your basket is cleared'));
-  drupal_goto();
-  session_write_close();
+  drupal_session_commit();
+  error_log('Reset basket for user: '. $user->uid);
+
+  drupal_goto(); 
 }
 /**
  * Helper function to check the access code when referring to a specific order.
