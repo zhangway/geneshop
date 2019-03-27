@@ -7,27 +7,34 @@
  */
 function theme_geneshop_generate_table($vars) {
     $basket_items = isset($_SESSION['basket']['items']) ? $_SESSION['basket']['items'] : array();
+    error_log("basket items:".var_export($basket_items, true));
     $items = array();
     $header = array();
     if ($basket_items) {
         foreach ($basket_items as $nid => $item) {
+            //error_log('item:'.var_export($item, true));
             $items[$nid] = l($item['content'], 'node/' . $nid);
             $header[]= $item['header'];
         }
     }
     $cols = array();
+    error_log("items:".var_export($items, true));
+    error_log("HEADER:".var_export($header, true));
     foreach($items as $nid => $content) {
+        //error_log('theme_geneshop_generate_table.items:'.var_export($items, true));
+        //error_log('nid:'.$nid);
         $cols[$nid] = explode("~", $content);
     }
-    
+    //error_log('itmes:'.var_export($items));
+    //error_log('cols:'.var_export($cols)); 
     $headers = explode("~",$header[0]);
     return array($basket_items, $cols, $headers);
 }
 function template_preprocess_geneshop_block_display(&$vars) {
-  //error_log("TEMPLATE_PREPROCESS+++++++from".var_export(drupal_get_destination(), true));
+  error_log("TEMPLATE_PREPROCESS+++++++from".var_export(drupal_get_destination(), true));
   drupal_add_css(drupal_get_path('module', 'geneshop') . '/theme/geneshop.css');
   $referrer = drupal_get_destination();
-  preg_match('search/gene' , $referrer['destination'], $matches1);
+  preg_match('#search/gene#' , $referrer['destination'], $matches1);
   if ( count($matches1) ) {	
     $basket_items = (count($_SESSION['basket']['items']) > 0) ? $_SESSION['basket']['items'] : array();
   error_log("items:".var_export($basket_items, true));

@@ -393,7 +393,9 @@ function geneshop_node_view($node, $view_mode, $langcode) {
     // Add to basket button:
     $node->content['geneshop_add2basket'] = array(
         '#markup' => geneshop_add2basket_link($node->nid),
-    );
+         #tripal_toc_id'    => 'geneshop_add2basket',
+          '#tripal_toc_title' => 'Add to basket',
+     );
   }
 }
 
